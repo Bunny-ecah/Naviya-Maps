@@ -12,4 +12,3 @@ document.addEventListener('click',e=>{if(!e.target.closest('.global-search')&&!e
 const previousPrivacy=privacy;privacy=function(){previousPrivacy();$('#modal-content').insertAdjacentHTML('afterbegin','<p><b>Real place search:</b> search text is sent through our server to Photon (Komoot). Your account identity is not forwarded. Opening a place loads an OpenStreetMap map, which receives your IP address and the selected map area. GPS location is not requested.</p>')};$('#privacy').onclick=privacy;
 const previousInfo=dataInfo;dataInfo=function(){previousInfo();$('#modal-content').insertAdjacentHTML('afterbegin','<div class="status-note">Place search and selected-place maps now use real OpenStreetMap data via Photon. The discovery catalogue and journey calculations remain examples. Nearby results use straight-line distance, not travel distance.</div>')};$('#data-info').onclick=dataInfo;$('#preview-info').onclick=dataInfo;
 })();
-
