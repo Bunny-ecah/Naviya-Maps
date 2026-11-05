@@ -7,8 +7,10 @@ A Malaysian place-discovery and road-journey website with a purple identity, lig
 ## Working features
 
 - General place and address search across Peninsular Malaysia, Sabah and Sarawak, powered by Photon/OpenStreetMap.
+- Search-type filters for **buildings/offices**, towns/areas, streets/addresses and shops/places. Named offices, towers, commercial/residential buildings and indexed numbered addresses are supported where mapped. Optional location preference prioritizes the selected area without replacing nationwide coverage.
+- Search suggestions render in a viewport-aware overlay, with separate scrollable rows and keyboard selection. They do not inherit the swap-button layout or sit behind the journey form.
 - A real, interactive OpenStreetMap map with markers for the places returned by the selected category.
-- Nearby restaurants, cafes, malls, hotels, museums, attractions, rail/bus transit locations, pharmacies, ATMs, petrol, EV charging, hospitals, parking, prayer spaces and rest areas.
+- Nearby restaurants, cafes, malls, offices, mapped buildings, schools, universities, hotels, museums, attractions, rail/bus transit locations, pharmacies, ATMs, petrol, EV charging, hospitals, parking, prayer spaces and rest areas.
 - Area selection through search or map movement, with **1, 3, 5 or 10 km** radius filters. Nearby distances are straight-line distances, not travel distances. The provider returns up to 40 mapped results; coverage is not exhaustive.
 - Real **driving, walking and cycling** route geometry, road distances, estimated journey durations, available alternatives and route steps through OSRM services. Times use road-network speeds, without live traffic.
 - Driving toll-avoidance requests where supported by the routing provider. An unsupported request produces an explicit error; it is never silently replaced with an ordinary route.
@@ -23,7 +25,7 @@ The earlier fixed sample catalogue, mock traffic overlay, simulated route choice
 
 Live traffic, current toll prices, dedicated motorbike routing, train/bus journey schedules and fares, verified camera alerts and official Smart Lane activation are **not connected**. Their UI explains the unavailable state instead of generating results. Train and bus selections can discover mapped transit locations but do not produce invented itineraries.
 
-Naviya is not a fully operational nationwide Waze replacement. Business listings and access conditions may be incomplete or outdated. There is no real-time vehicle tracking, spoken navigation or traffic-aware ETA. A full commercial launch requires dedicated service capacity, licensed/verified traffic and transport data, operational monitoring and field validation.
+Naviya is not a fully operational nationwide Waze replacement. Search returns up to 24 matches from the provider index; this is not a complete national building registry. Not every physical building, company or address is mapped or indexed. Building footprints and names on the base map become visible as you zoom in. Business listings and access conditions may be incomplete or outdated. There is no real-time vehicle tracking, spoken navigation or traffic-aware ETA. A full commercial launch requires dedicated service capacity, licensed/verified traffic and transport data, operational monitoring and field validation.
 
 ## Run locally
 

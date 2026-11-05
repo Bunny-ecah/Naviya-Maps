@@ -1,6 +1,14 @@
 import assert from 'node:assert/strict';
-import {normalize,distanceKm} from '../lib/place-search.ts';
+import {normalize,distanceKm,classify,rankPlaces} from '../lib/place-search.ts';
 const feature=(name,cc,coords=[101.7,3.14])=>({properties:{name,countrycode:cc,osm_id:1,osm_type:'W',osm_value:'mall',street:'Jalan Test',city:'Kuala Lumpur'},geometry:{coordinates:coords}});
 const data=normalize([feature('A <Mall>','MY'),feature('A <Mall>','MY'),feature('Foreign','SG'),feature('Invalid','MY',[null,3])]);
 assert.equal(data.length,1);assert.equal(data[0].type,'Mall');assert.equal(data[0].name,'A <Mall>');assert.equal(data[0].lat,3.14);assert.equal(distanceKm(3,101,3,101),0);assert.ok(distanceKm(3,101,3.01,101)>1);
 console.log('PASS: Malaysia filtering, invalid coordinates, deduplication, classification and distance');
+assert.equal(classify({osm_key:'office',osm_value:'company'}).category,'office');
+assert.equal(classify({osm_key:'building',osm_value:'office'}).type,'Office building');
+assert.equal(classify({osm_key:'highway',osm_value:'residential',type:'street'}).category,'address');
+assert.equal(classify({osm_key:'place',osm_value:'city'}).category,'area');
+const samples=[{id:'1',name:'Menara Test Cafe',category:'place',type:'Cafe',lat:3,lon:101,address:''},{id:'2',name:'Menara Test',category:'building',type:'Office building',lat:3,lon:101,address:''}];
+assert.equal(rankPlaces(samples,'Menara Test','buildings')[0].id,'2');
+assert.equal(rankPlaces([{...samples[0],name:'Jaya Grocer'},{...samples[1],name:'Jaya',category:'area',type:'Town'}],'Jaya')[0].name,'Jaya');
+console.log('PASS: office/building/address/area classification and intent-aware search ranking');
