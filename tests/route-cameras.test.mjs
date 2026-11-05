@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {camerasForRoute,simplify,segmentDistance} from '../lib/route-cameras.ts';
+const route=[[101,3],[101.01,3]],camera=(id,lat=3,lon=101.005)=>({type:'node',id,lat,lon,tags:{highway:'speed_camera'}});
+assert.equal(camerasForRoute(route,[camera(1),camera(1),camera(2,3.01),{...camera(3),tags:{}}]).length,1);
+assert.equal(camerasForRoute(route,[camera(1,3.0004)]).length,1);
+assert.equal(camerasForRoute(route,[camera(1,3.0006)]).length,0);
+assert.equal(camerasForRoute(route,[camera(1,NaN)]).length,0);
+assert.equal(camerasForRoute(route,[]).length,0);
+assert.ok(segmentDistance([101,3.001],[101,3],[101,3])>100);
+const bend=[[101,3],[101.005,3.01],[101.01,3]];assert.deepEqual(simplify(bend),bend);
+assert.deepEqual(simplify([[101,3],[101.005,3],[101.01,3]]),route);
+console.log('PASS camera corridor boundaries, duplicates, invalid tags, empty results and curved routes');
