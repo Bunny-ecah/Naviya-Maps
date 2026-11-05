@@ -4,6 +4,12 @@
 
 A Malaysian place-discovery and road-journey website with a purple identity, light/dark themes and self-hosted SVG icons.
 
+## Phone and tablet layouts
+
+The interface adapts across phone, tablet and desktop widths while retaining the same identity. Smaller screens have a map-first layout, larger touch controls, a fixed Map/Plan/Nearby/Saved/More navigation bar, scrollable place filters and bottom-sheet dialogs. The More menu exposes saved journeys, observations, highway information, privacy and account access. Input text is 16 px on mobile to avoid automatic input zoom; search overlays account for the visual viewport and the mobile navigation hides while typing. Device safe areas and reduced-motion preferences are respected. Sign-in, account and rewards pages are also responsive.
+
+Verified in Chromium viewport previews at 320, 390, 768, 1024 and 1366 px, including horizontal-overflow checks, navigation/dialog actions, search result bounds and account input sizing. `public/responsive.css` contains shared responsive rules; `public/mobile-nav.js` provides the compact navigation. Physical-device and cross-browser validation is still recommended before a large public launch.
+
 ## Working features
 
 - General place and address search across Peninsular Malaysia, Sabah and Sarawak, powered by Photon/OpenStreetMap.

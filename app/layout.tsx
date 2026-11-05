@@ -17,7 +17,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <head><link rel="stylesheet" href="/icons.css"/></head>
+      <head><link rel="stylesheet" href="/icons.css"/><link rel="stylesheet" href="/responsive.css"/></head>
       <body className="antialiased">{children}</body>
     </html>
   );
