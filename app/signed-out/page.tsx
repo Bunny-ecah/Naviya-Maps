@@ -1,0 +1,3 @@
+import Icon from '../Icon';
+import { chatGPTSignInPath } from '../chatgpt-auth';
+export default function SignedOut(){return <><link rel="stylesheet" href="/account.css"/><main className="signed-out"><a className="account-brand" href="/">naviya<sup>MY</sup></a><div className="signed-out-icon"><Icon name="logout"/></div><span className="eyebrow">UNTIL YOUR NEXT ADVENTURE</span><h1>You’ve signed out.</h1><p>Your points and rewards will be here when you return.<br/>Device-local saved trips and day plans remain in this browser.</p><a className="auth-primary" href={chatGPTSignInPath('/account')} target="_top">Sign in again ↗</a><a className="back-link" href="/">Keep exploring →</a></main></>}
