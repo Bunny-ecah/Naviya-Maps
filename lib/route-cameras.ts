@@ -16,6 +16,7 @@ export function camerasForRoute(points:Point[],elements:any[]){
  const seen=new Set<number>();
  return elements.filter(n=>{
  if(n.type!=='node'||!Number.isSafeInteger(n.id)||seen.has(n.id)||n.tags?.highway!=='speed_camera'||!Number.isFinite(n.lat)||!Number.isFinite(n.lon))return false;
- seen.add(n.id);return points.slice(1).some((b,i)=>segmentDistance([n.lon,n.lat],points[i],b)<=50);
+ seen.add(n.id);const p:Point=[n.lon,n.lat],padLat=50/metres,padLon=padLat/Math.cos(n.lat*Math.PI/180);
+ for(let i=1;i<points.length;i++){const a=points[i-1],b=points[i];if(n.lat<Math.min(a[1],b[1])-padLat||n.lat>Math.max(a[1],b[1])+padLat||n.lon<Math.min(a[0],b[0])-padLon||n.lon>Math.max(a[0],b[0])+padLon)continue;if(segmentDistance(p,a,b)<=50)return true}return false;
  }).map(n=>({id:n.id,lat:n.lat,lon:n.lon,name:typeof n.tags.name==='string'?n.tags.name:'Mapped fixed speed camera',maxspeed:typeof n.tags.maxspeed==='string'?n.tags.maxspeed:null}));
 }

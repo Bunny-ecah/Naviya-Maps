@@ -12,3 +12,6 @@ const samples=[{id:'1',name:'Menara Test Cafe',category:'place',type:'Cafe',lat:
 assert.equal(rankPlaces(samples,'Menara Test','buildings')[0].id,'2');
 assert.equal(rankPlaces([{...samples[0],name:'Jaya Grocer'},{...samples[1],name:'Jaya',category:'area',type:'Town'}],'Jaya')[0].name,'Jaya');
 console.log('PASS: office/building/address/area classification and intent-aware search ranking');
+
+assert.equal(classify({osm_key:"highway",osm_value:"bus_stop"}).type,"Transit");
+assert.equal(classify({osm_key:"highway",osm_value:"rest_area"}).type,"Rest stop");

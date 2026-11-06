@@ -3,6 +3,7 @@ import ts from 'typescript';
 import assert from 'node:assert/strict';
 let source=await fs.readFile(new URL('../app/api/route-cameras/route.ts',import.meta.url),'utf8');
 source=source.replace("import {env} from 'cloudflare:workers';",'const env={};').replaceAll("'../../../lib/road-routing'",JSON.stringify(new URL('../lib/road-routing.ts',import.meta.url).href)).replaceAll("'../../../lib/route-cameras'",JSON.stringify(new URL('../lib/route-cameras.ts',import.meta.url).href));
+source=source.replace("'../../../lib/provider-http'",JSON.stringify(new URL('../lib/provider-http.ts',import.meta.url).href));
 const {outputText}=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}});
 const {POST}=await import('data:text/javascript;base64,'+Buffer.from(outputText).toString('base64'));
 const oldFetch=globalThis.fetch,oldNow=Date.now;let now=oldNow(),calls=0;
