@@ -151,7 +151,9 @@
     if (area) map.setView([area.lat, area.lon], area.category === "area" ? 12 : ["building", "office"].includes(area.category) ? 17 : 16);
     else map.setView([4.4, 109.4], 5);
   };
-  $("#locate-me").onclick = () => {
+  let myLocation = null;
+  // Asks for the device location only when the visitor taps a location button. `after` lets search reuse it.
+  function locateMe(after) {
     if (!navigator.geolocation) {
       toast("Location is unavailable in this browser. Search for a place instead.");
       return;
@@ -164,6 +166,8 @@
         toast("Your location is outside the supported Malaysian area. Please search for a Malaysian place.");
         return;
       }
+      myLocation = p;
+      if (after) return after(p);
       setField("#origin", p);
       invalidateRoute();
       setArea(p);
@@ -171,7 +175,8 @@
       $("#locate-me").disabled = false;
       toast("Location could not be accessed. You can still search for a town, address or landmark.");
     }, { enableHighAccuracy: false, timeout: 1e4, maximumAge: 6e4 });
-  };
+  }
+  $("#locate-me").onclick = () => locateMe();
   function renderCategories() {
     const html = categoryList.map((c) => `<button data-category="${c[0]}" class="${category === c[0] ? "active" : ""}" aria-pressed="${category === c[0]}"><span>${NI(c[1])}</span>${c[2]}</button>`).join("");
     $("#categories").innerHTML = html;
@@ -331,32 +336,67 @@
     const field = searchState?.field || $("#place-search");
     if (field.value.trim().length >= 2) startSearch(field, true);
   };
+  $("#search-bias").checked = read("nearest", true) !== false;
   $("#search-bias").onchange = () => {
+    write("nearest", $("#search-bias").checked);
     const field = searchState?.field || $("#place-search");
     if (field.value.trim().length >= 2) startSearch(field, true);
   };
+  // Where "nearest" means: the other end of the journey, the selected area, your location, or the map you're looking at.
+  function searchBias(field) {
+    if (!$("#search-bias").checked) return null;
+    const other = field.id === "origin" ? fieldPoint("#destination") : field.id === "destination" ? fieldPoint("#origin") : null;
+    if (other && inside(other)) return { lat: other.lat, lon: other.lon, name: other.name };
+    if (area) return { lat: area.lat, lon: area.lon, name: area.name };
+    if (myLocation) return { lat: myLocation.lat, lon: myLocation.lon, name: "you" };
+    if (map.getZoom() >= 9) { const c = map.getCenter(); return { lat: c.lat, lon: c.lng, name: "the map area" }; }
+    return null;
+  }
+  const quickSearches = [["mall", "Malls"], ["restoran", "Restoran"], ["petrol", "Petrol"], ["klinik", "Klinik"], ["surau", "Surau & masjid"], ["atm", "ATM"], ["hotel", "Hotel"], ["parking", "Parking"]];
+  function showQuickSearches(field) {
+    closeSearch();
+    const box = field.id === "place-search" ? $("#search-results") : routeBox;
+    const state = { field, box, q: "", index: -1, places: [], timer: null, abort: null };
+    searchState = state;
+    box.hidden = false;
+    const where = searchBias(field);
+    box.innerHTML = `<div class="search-heading">Quick search <span>${where ? "near " + esc(where.name) : "Malaysia"}</span></div><div class="quick-chips">${quickSearches.map(([q, label]) => `<button type="button" data-quick="${q}">${label}</button>`).join("")}</div><div class="search-tip">Or type a name, address, postcode, or things like <b>mall dekat JB</b> or <b>petrol near me</b>.</div>`;
+    box.querySelectorAll("[data-quick]").forEach((b) => b.onclick = () => { field.value = b.dataset.quick; field.focus(); startSearch(field, true); });
+    positionSearch(state);
+  }
   function startSearch(field, immediate = false) {
     closeSearch();
     const q = field.value.trim();
+    if (!q) return showQuickSearches(field);
     if (q.length < 2) return;
     const box = field.id === "place-search" ? $("#search-results") : routeBox;
-    const state = { field, box, q, kind: $("#search-kind").value, bias: $("#search-bias").checked && area ? { lat: area.lat, lon: area.lon } : null, index: -1, places: [], timer: null, abort: null };
+    const state = { field, box, q, kind: field.id === "place-search" ? $("#search-kind").value : "all", bias: searchBias(field), index: -1, places: [], timer: null, abort: null };
     searchState = state;
     box.hidden = false;
     field.setAttribute("aria-expanded", "true");
     box.innerHTML = '<div class="empty">Searching places across Malaysia\u2026</div>';
     positionSearch(state);
-    state.timer = setTimeout(() => runSearch(state), immediate ? 0 : 700);
+    state.timer = setTimeout(() => runSearch(state), immediate ? 0 : 350);
   }
   async function runSearch(state) {
     state.abort?.abort();
     state.abort = new AbortController();
     try {
-      const data = await api("/api/search?" + new URLSearchParams({ q: state.q, kind: state.kind, ...state.bias ? { lat: state.bias.lat, lon: state.bias.lon } : {} }), state.abort.signal);
+      const data = await api("/api/search?" + new URLSearchParams({ q: state.q, kind: state.kind, ...state.bias ? { lat: state.bias.lat, lon: state.bias.lon, near: state.bias.name } : {} }), state.abort.signal);
       if (searchState !== state) return;
-      state.places = data.places;
-      state.box.innerHTML = `<div class="search-heading">${state.places.length} search matches <span>Malaysia</span></div>${state.places.length ? state.places.map((p, i) => `<button role="option" id="${state.field.id}-option-${i}" aria-selected="false" data-result="${i}"><span class="suggest-icon">${NI(iconFor(p.type))}</span><div><b>${esc(p.name)}</b><small>${esc(p.address)} \xB7 ${esc(p.type)}</small></div><span>${NI("arrow")}</span></button>`).join("") : '<div class="empty">No mapped matches. Try a fuller name, town or address.</div>'}<div class="search-credit">\xA9 OpenStreetMap contributors \xB7 Photon</div>`;
+      state.places = data.places || [];
+      const intent = data.intent;
+      const heading = intent ? intent.near ? `${esc(intent.label)} near ${esc(intent.near)}` : `${esc(intent.label)} across Malaysia` : state.places.length ? `${state.places.length} match${state.places.length === 1 ? "" : "es"}` : "No matches yet";
+      const where = intent ? (intent.near ? "Nearest first" : "") : state.bias ? "Near " + esc(state.bias.name) : "Malaysia";
+      const locateHint = intent && !intent.near ? `<div class="search-tip">${intent.placeText ? `Couldn't find "${esc(intent.placeText)}". Try the full town name, or ` : "For the nearest ones, "}<button type="button" class="link-btn" id="search-locate">${NI("locate")} use my location</button></div>` : "";
+      const rows = state.places.map((p, i) => `<button role="option" id="${state.field.id}-option-${i}" aria-selected="false" data-result="${i}"><span class="suggest-icon">${NI(iconFor(p.type))}</span><div><b>${esc(p.name)}</b><small>${Number.isFinite(p.distance) ? `<em class="dist">${distance(p.distance)}</em> \xB7 ` : ""}${esc(p.type)} \xB7 ${esc(p.address)}</small></div><span>${NI("arrow")}</span></button>`).join("");
+      const tries = intent ? ["mall dekat KLCC", "petrol near me", "klinik di Shah Alam"] : ["Sunway Pyramid", "Jalan Ampang", "mall dekat JB", "81300"];
+      const empty = `<div class="empty"><b>No places found for "${esc(state.q)}".</b><br>Check the spelling, use a fuller name, or try:<div class="quick-chips">${tries.map((t) => `<button type="button" data-try="${esc(t)}">${esc(t)}</button>`).join("")}</div></div>`;
+      state.box.innerHTML = `<div class="search-heading">${heading} <span>${where}</span></div>${locateHint}${state.places.length ? rows : empty}<div class="search-credit">\xA9 OpenStreetMap contributors \xB7 Photon</div>`;
       state.box.querySelectorAll("[data-result]").forEach((b) => b.onclick = () => pickSearch(state, +b.dataset.result));
+      state.box.querySelectorAll("[data-try]").forEach((b) => b.onclick = () => { state.field.value = b.dataset.try; state.field.focus(); startSearch(state.field, true); });
+      const loc = state.box.querySelector("#search-locate");
+      if (loc) loc.onclick = () => locateMe(() => { state.field.focus(); startSearch(state.field, true); });
       positionSearch(state);
     } catch (e) {
       if (e.name === "AbortError" || searchState !== state) return;
@@ -389,6 +429,9 @@
     f.setAttribute("aria-autocomplete", "list");
     f.setAttribute("aria-controls", id === "#place-search" ? "search-results" : "route-search-results");
     f.setAttribute("aria-expanded", "false");
+    f.onfocus = () => {
+      if (!f.value.trim()) showQuickSearches(f);
+    };
     f.oninput = () => {
       delete f.dataset.lat;
       delete f.dataset.lon;
@@ -404,7 +447,7 @@
       if (e.key === "Enter" && s?.field === f) {
         e.preventDefault();
         if (s.places.length) pickSearch(s, s.index < 0 ? 0 : s.index);
-        else {
+        else if (s.q) {
           clearTimeout(s.timer);
           runSearch(s);
         }
@@ -423,6 +466,8 @@
     };
   });
   document.addEventListener("click", (e) => {
+    // A button inside the results that redrew the list is no longer in the page; that click must not close search.
+    if (!e.target.isConnected) return;
     if (!e.target.closest(".global-search") && !e.target.closest(".locations") && !e.target.closest(".search-portal")) closeSearch();
   });
   document.addEventListener("keydown", (e) => {

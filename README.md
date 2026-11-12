@@ -13,6 +13,7 @@ Verified in Chromium viewport previews at 320, 390, 768, 1024 and 1366 px, inclu
 ## Working features
 
 - General place and address search across Peninsular Malaysia, Sabah and Sarawak, powered by Photon/OpenStreetMap.
+- **Smart search** that understands kinds of places in English and Bahasa Melayu: `mall`, `restoran`, `kedai makan dekat PJ`, `petrol near me`, `klinik di Shah Alam`, `jb mall`, `surau`, `tandas`, `R&R` and more (`lib/search-intent.ts`). These return the nearest real places of that kind around the named town, your location, the selected area or the map on screen, with distances. Short forms are expanded (KL, JB, PJ, KK, 1U, jln, tmn, kg). Names that look like categories ("Masjid Jamek", "Taman Universiti") still find the named place first. Tapping the search box shows quick-search chips; "Nearest first" is on by default.
 - Search-type filters for **buildings/offices**, towns/areas, streets/addresses and shops/places. Named offices, towers, commercial/residential buildings and indexed numbered addresses are supported where mapped. Optional location preference prioritizes the selected area without replacing nationwide coverage.
 - Search suggestions render in a viewport-aware overlay, with separate scrollable rows and keyboard selection. They do not inherit the swap-button layout or sit behind the journey form.
 - A real, interactive OpenStreetMap map with markers for the places returned by the selected category.
@@ -71,6 +72,7 @@ Apply each migration once, in order. Production and preview databases are separa
 node tests/place-search.test.mjs
 node tests/road-routing.test.mjs
 node tests/transit-and-tolls.test.mjs
+node tests/search-intent.test.mjs
 npm run build
 ```
 
