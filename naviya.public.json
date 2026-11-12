@@ -1,6 +1,7 @@
 {
   "workerName": "naviya",
   "databaseName": "naviya-db",
+  "customDomains": [],
   "vars": {
     "NAVIYA_TILE_URL": "",
     "NAVIYA_TILE_ATTRIBUTION": "",

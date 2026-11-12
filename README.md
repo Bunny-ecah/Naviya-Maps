@@ -130,6 +130,7 @@ On this self-hosted site:
 - For more traffic, point `NAVIYA_PHOTON_URL`, `NAVIYA_ROUTER_*_URL` and `NAVIYA_OVERPASS_URL` at dedicated services. The public demo services have no guarantee and can block heavy use.
 - Optional live traffic: `npm run deploy:public -- --secret NAVIYA_TOMTOM_KEY` (asks you to paste the key).
 - Privacy policy and terms: `/privacy.html`.
+- Your own domain: add the domain to the same Cloudflare account (buy it under Domains → Register, or point an existing domain's nameservers to Cloudflare), then list it in `naviya.public.json`, for example `"customDomains": ["naviya.my", "www.naviya.my"]`, and run `npm run deploy:public`. Visiting `/` opens the map.
 
 ## Deployment and provider capacity
 

@@ -16,7 +16,7 @@ const isCodexSeatbeltSandbox = process.env.CODEX_SANDBOX === "seatbelt";
 const managedLinux = readExecutionProfile() === "managed-linux";
 
 // Set by scripts/deploy-public.mjs for a self-hosted public Cloudflare deployment.
-const publicDeploy: null | { workerName: string; databaseName: string; databaseId: string; vars?: Record<string, string> } =
+const publicDeploy: null | { workerName: string; databaseName: string; databaseId: string; vars?: Record<string, string>; customDomains?: string[] } =
   process.env.NAVIYA_PUBLIC_DEPLOY ? JSON.parse(process.env.NAVIYA_PUBLIC_DEPLOY) : null;
 
 const localBindingConfig = publicDeploy ? {
@@ -27,6 +27,8 @@ const localBindingConfig = publicDeploy ? {
   d1_databases: [{ binding: "DB", database_name: publicDeploy.databaseName, database_id: publicDeploy.databaseId }],
   r2_buckets: [],
   vars: { ...(publicDeploy.vars || {}), NAVIYA_PUBLIC_HOSTING: "true" },
+  // Your own domains (for example "naviya.my" and "www.naviya.my"); the domain must be on the same Cloudflare account.
+  ...(publicDeploy.customDomains?.length ? { routes: publicDeploy.customDomains.map((pattern) => ({ pattern, custom_domain: true })) } : {}),
 } : {
   main: "./worker/index.ts",
   compatibility_flags: ["nodejs_compat"],

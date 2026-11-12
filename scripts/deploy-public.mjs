@@ -23,6 +23,8 @@ if (!existsSync(wrangler) || !existsSync(vinext)) fail("Dependencies are missing
 const settings = JSON.parse(readFileSync("naviya.public.json", "utf8"));
 if (!/^[a-z0-9-]{1,60}$/.test(settings.workerName || "")) fail('naviya.public.json: "workerName" must be lowercase letters, numbers and dashes.');
 if (!/^[a-z0-9-]{1,60}$/.test(settings.databaseName || "")) fail('naviya.public.json: "databaseName" must be lowercase letters, numbers and dashes.');
+const customDomains = (settings.customDomains || []).map((d) => String(d).trim().toLowerCase()).filter(Boolean);
+for (const d of customDomains) if (!/^(?=.{4,253}$)([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/.test(d)) fail(`naviya.public.json: "${d}" is not a valid domain (write it without https:// or slashes).`);
 const vars = Object.fromEntries(Object.entries(settings.vars || {}).filter(([, v]) => typeof v === "string" && v.trim()));
 
 function run(file, args, { capture = false, env = {} } = {}) {
@@ -54,7 +56,7 @@ if (!databaseId) fail("Could not read the database ID from Cloudflare.");
 console.log(`Using database ${databaseId}`);
 
 step("Building Naviya for public hosting");
-const deployEnv = { NAVIYA_PUBLIC_DEPLOY: JSON.stringify({ workerName: settings.workerName, databaseName: settings.databaseName, databaseId, vars }) };
+const deployEnv = { NAVIYA_PUBLIC_DEPLOY: JSON.stringify({ workerName: settings.workerName, databaseName: settings.databaseName, databaseId, vars, customDomains }) };
 if (run(vinext, ["build"], { env: deployEnv }).status !== 0) fail("The build failed. Fix the error above and run again.");
 if (!existsSync(builtConfig)) fail(`The build did not produce ${builtConfig}.`);
 
@@ -87,5 +89,5 @@ if (wr(["deploy", "--config", builtConfig]).status !== 0) {
     "  3. Run `npm run deploy:public` again.",
   ].join("\n"));
 }
-console.log("\n\u2705 Naviya is live. Open the https://\u2026workers.dev address shown above and add /explore.html");
+console.log(`\n\u2705 Naviya is live. ${customDomains.length ? "Open https://" + customDomains[0] + " (a new domain can take a few minutes to start working)" : "Open the https://\u2026workers.dev address shown above"}.`);
 console.log("Run `npm run deploy:public` again after each update.");
