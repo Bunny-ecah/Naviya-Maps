@@ -2,7 +2,7 @@ export type ProviderEnvironment = {DB?:D1Database;[key:string]:unknown};
 export class ServiceError extends Error {status:number;retryAfter:number;constructor(message:string,status=503,retryAfter=15){super(message);this.status=status;this.retryAfter=retryAfter}}
 export function endpoint(value:unknown,fallback:string){const url=new URL(typeof value==='string'&&value?value:fallback);if(url.protocol!=='https:'||url.username||url.password||url.hash)throw new Error('Provider endpoints must use HTTPS without embedded credentials.');return url}
 const cache=new Map<string,{expires:number;data:unknown;bytes:number}>(),pending=new Map<string,Promise<unknown>>(),cooldown=new Map<string,number>();let cacheBytes=0;
-const limits={places:{minute:60,day:4000},routing:{minute:30,day:1000},cameras:{minute:6,day:100},transit:{minute:40,day:6000},traffic:{minute:20,day:2000}};
+const limits={places:{minute:60,day:4000},routing:{minute:30,day:1000},cameras:{minute:12,day:400},transit:{minute:40,day:6000},traffic:{minute:20,day:2000}};
 let budgetWarned=false;
 async function budget(env:ProviderEnvironment,service:keyof typeof limits){
  if(!env.DB)return;

@@ -82,3 +82,87 @@
 .search-portal small .dist{font-style:normal;font-weight:700;color:var(--purple)}
 .search-portal .empty b{color:var(--text)}
 .search-settings span b{font-weight:600;color:var(--text)}
+
+/* ---------- Trip actions ---------- */
+.handoff button{flex:1 1 40%;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:44px;padding:0 14px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--text);font-weight:600;font-size:13px;cursor:pointer}
+.handoff button .ni{width:16px;height:16px;color:var(--purple)}
+.handoff .nav-start{flex-basis:100%;min-height:52px;font-size:15px;background:var(--purple);border-color:var(--purple);color:#fff}
+.handoff .nav-start .ni{color:#fff;width:18px;height:18px}
+.handoff button:disabled{opacity:.6}
+.day-route{border:0;cursor:pointer;width:100%}
+
+/* Home & Work */
+.hw-shortcuts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0 4px}
+.hw-shortcuts button{display:flex;align-items:center;gap:9px;min-height:52px;padding:8px 12px;border-radius:12px;border:1px dashed var(--line);background:var(--surface);color:var(--text);text-align:left;cursor:pointer}
+.hw-shortcuts button.set{border-style:solid;background:var(--purple-soft)}
+.hw-shortcuts .ni{width:18px;height:18px;color:var(--purple);flex:none}
+.hw-shortcuts span{min-width:0}
+.hw-shortcuts b{display:block;font-size:12.5px}
+.hw-shortcuts small{display:block;font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.search-portal .quick-chips button.hw{gap:5px;background:var(--surface);border-color:var(--purple)}
+.search-portal .quick-chips button.hw .ni{width:14px;height:14px}
+.place-secondary button .ni{width:14px;height:14px;vertical-align:-2px}
+
+/* Stops on the way */
+.via-list{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 0}
+.via-list[hidden]{display:none}
+.via-chip{display:inline-flex;align-items:center;gap:6px;max-width:100%;padding:4px 4px 4px 10px;border-radius:16px;background:var(--purple-soft);color:var(--text);font-size:12px}
+.via-chip .ni{width:13px;height:13px;color:var(--purple);flex:none}
+.via-chip b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.via-chip button{width:28px;height:28px;border:0;border-radius:50%;background:var(--surface);color:var(--muted);font-size:16px;cursor:pointer}
+
+/* Stops & prayer modal */
+.prayer-box{border-radius:12px;padding:12px;background:var(--purple-soft);margin-bottom:12px}
+.prayer-title{display:flex;align-items:center;gap:6px;font-size:13px;margin-bottom:6px}
+.prayer-title .ni,.prayer-none .ni{width:16px;height:16px;color:var(--purple)}
+.prayer-none{display:flex;gap:8px;align-items:center;font-size:12.5px}
+.prayer-row{padding:8px 0;border-top:1px solid var(--line)}
+.prayer-row b{display:block;font-size:13px}
+.prayer-row small{color:var(--muted);font-size:11px}
+.prayer-stop{display:inline-flex;gap:5px;align-items:baseline;margin:6px 6px 0 0;min-height:34px;padding:0 10px;border-radius:17px;border:1px solid var(--purple);background:var(--surface);color:var(--purple);font-size:12px;font-weight:600;cursor:pointer}
+.prayer-wait{display:block;margin-top:4px}
+.stop-tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:6px}
+.stop-tabs button{display:inline-flex;align-items:center;gap:5px;flex:none;min-height:38px;padding:0 12px;border-radius:19px;border:1px solid var(--line);background:var(--surface);color:var(--text);font-size:12.5px;cursor:pointer}
+.stop-tabs button .ni{width:15px;height:15px;color:var(--purple)}
+.stop-tabs button[aria-selected="true"]{background:var(--purple);border-color:var(--purple);color:#fff}
+.stop-tabs button[aria-selected="true"] .ni{color:#fff}
+.stop-row{display:flex;align-items:center;gap:8px;padding:10px 0;border-top:1px solid var(--line)}
+.stop-row>div{flex:1;min-width:0}
+.stop-row b{display:block;font-size:13px}
+.stop-row small{color:var(--muted);font-size:11px}
+.stop-row button{min-height:38px;min-width:38px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--purple);cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
+.stop-row button .ni{width:16px;height:16px}
+.stop-row button.add{padding:0 12px;font-weight:700;font-size:12px}
+
+/* ---------- Navigation mode ---------- */
+#nav-ui[hidden]{display:none}
+body.navigating{overflow:hidden}
+body.navigating header,body.navigating .mobile-nav,body.navigating .install-card,body.navigating .rail,
+body.navigating .map-live-toolbar,body.navigating .map-location-actions,body.navigating .map-fullscreen,body.navigating .map-state,
+body.navigating #search-area,body.navigating .leaflet-control-zoom,body.navigating .map-regions{display:none!important}
+body.navigating .map{position:fixed!important;inset:0!important;height:auto!important;min-height:0!important;z-index:4700;border-radius:0!important;margin:0!important}
+#nav-ui{position:fixed;inset:0;z-index:4800;pointer-events:none;font-family:inherit}
+#nav-ui>*{pointer-events:auto}
+.nav-top{position:absolute;top:calc(10px + env(safe-area-inset-top));left:10px;right:10px;max-width:560px;display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:18px;background:#3a2482;color:#fff;box-shadow:0 10px 30px #1a0e3f55}
+.nav-arrow{flex:none;width:56px;height:56px;display:flex;align-items:center;justify-content:center;border-radius:14px;background:#ffffff1f}
+.nav-text{min-width:0}
+.nav-dist{display:block;font-size:28px;line-height:1.1;font-weight:800;letter-spacing:-.5px}
+.nav-instr{display:block;font-size:16px;line-height:1.35;margin-top:2px;overflow-wrap:anywhere}
+.nav-then{position:absolute;top:calc(112px + env(safe-area-inset-top));left:10px;display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:0 0 12px 12px;background:#2a1a63;color:#fff;font-size:13px;font-weight:600}
+.nav-then[hidden],.nav-banner[hidden],.nav-recenter[hidden]{display:none}
+.nav-banner{position:absolute;top:calc(118px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);max-width:calc(100% - 24px);padding:8px 14px;border-radius:20px;background:var(--text);color:var(--surface);font-size:12.5px;text-align:center}
+.nav-next{position:absolute;top:calc(112px + env(safe-area-inset-top));left:10px;right:10px;max-width:560px;display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:14px 16px;border-radius:16px;border:0;background:#2f8f6a;color:#fff;text-align:left;cursor:pointer;box-shadow:0 10px 26px #0003}
+.nav-next small{opacity:.85;font-size:12px}
+.nav-next b{font-size:17px}
+.nav-next span{font-weight:800;margin-top:4px}
+.nav-recenter{position:absolute;right:12px;bottom:calc(104px + env(safe-area-inset-bottom));display:flex;align-items:center;gap:6px;min-height:46px;padding:0 16px;border-radius:23px;border:1px solid var(--line);background:var(--surface);color:var(--purple);font-weight:700;box-shadow:0 6px 18px #25123e33}
+.nav-recenter .ni{width:18px;height:18px}
+.nav-bottom{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px calc(12px + env(safe-area-inset-bottom));background:var(--surface);border-top:1px solid var(--line);box-shadow:0 -8px 24px #25123e1f}
+.nav-eta b{display:block;font-size:24px;font-weight:800;color:#2f8f6a;line-height:1.1}
+.nav-eta small{display:block;font-size:13px;color:var(--muted)}
+.nav-actions{display:flex;align-items:center;gap:8px}
+.nav-actions button{width:48px;height:48px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--text);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.nav-actions button .ni{width:20px;height:20px}
+.nav-actions .nav-end{width:auto;padding:0 18px;border-radius:24px;border:0;background:#c43c3c;color:#fff;font-weight:800}
+.nav-me span{display:flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;background:#7a4ddb;border:3px solid #fff;box-shadow:0 2px 10px #0005;transition:transform .4s;box-sizing:border-box}
+@media (min-width:761px){.nav-top{left:24px;right:auto;width:440px}.nav-next{left:24px;right:auto;width:440px}.nav-then{left:24px}.nav-bottom{left:24px;right:auto;bottom:24px;width:440px;border-radius:18px;border:1px solid var(--line)}.nav-recenter{bottom:120px}}

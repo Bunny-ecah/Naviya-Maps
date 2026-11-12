@@ -98,10 +98,32 @@
   const report = $('#report');
   if (report) { report.setAttribute('aria-label', 'Add road note'); report.querySelector('use')?.setAttribute('href', '/icons.svg#flag'); }
 
-  // ---- Deep links: ?q=mall+near+me, ?view=saved (used by home-screen shortcuts) ----
+  // ---- Language: English / Bahasa Melayu ----
+  const isMs = () => window.I18N?.lang === 'ms';
+  const langBtn = document.createElement('button');
+  langBtn.type = 'button';
+  langBtn.className = 'iconbtn lang-toggle';
+  langBtn.textContent = isMs() ? 'EN' : 'BM';
+  langBtn.setAttribute('aria-label', isMs() ? 'Switch to English' : 'Tukar ke Bahasa Melayu');
+  langBtn.onclick = () => window.I18N?.set(isMs() ? 'en' : 'ms');
+  $('#theme')?.before(langBtn);
+  new MutationObserver(() => {
+    const menu = document.querySelector('.mobile-more-menu');
+    if (!menu || menu.querySelector('[data-lang]')) return;
+    const row = document.createElement('button');
+    row.dataset.lang = '1';
+    row.innerHTML = NI('sparkles') + '<div><b>' + (isMs() ? 'Language: Bahasa Melayu' : 'Language: English') + '</b><small>' + (isMs() ? 'Switch to English' : 'Tukar ke Bahasa Melayu') + '</small></div>';
+    row.onclick = () => window.I18N?.set(isMs() ? 'en' : 'ms');
+    menu.append(row);
+  }).observe($('#modal-content'), { childList: true });
+
+  // ---- Deep links: ?q=mall+near+me, ?view=saved, ?to=lat,lon&toName=…&from=…&mode=car (shared journeys) ----
   const params = new URLSearchParams(location.search);
+  const point = (v, name) => { const [lat, lon] = (v || '').split(',').map(Number); return Number.isFinite(lat) && Number.isFinite(lon) && lat >= 0 && lat <= 8 && lon >= 99 && lon <= 120 ? { lat, lon, name: (name || 'Shared place').slice(0, 80), address: '' } : null; };
   addEventListener('load', () => {
-    if (params.get('q')) window.Naviya?.search(params.get('q').slice(0, 120));
+    const to = point(params.get('to'), params.get('toName'));
+    if (to) window.Naviya?.plan(point(params.get('from'), params.get('fromName')), to, ['car', 'motorbike', 'walk', 'cycle', 'train', 'bus'].includes(params.get('mode')) ? params.get('mode') : 'car');
+    else if (params.get('q')) window.Naviya?.search(params.get('q').slice(0, 120));
     else if (params.get('view') === 'saved') window.Naviya?.savedJourneys();
   });
 })();

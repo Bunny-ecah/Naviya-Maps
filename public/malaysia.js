@@ -263,8 +263,40 @@
     $("#day-count").textContent = day.length;
     toast("Added to your day plan on this browser.");
   }
+  let homeWork = read("places", {});
+  if (!homeWork || typeof homeWork !== "object") homeWork = {};
+  const hwLabel = { home: "Home", work: "Work" };
+  function setHomeWork(kind, p) {
+    homeWork[kind] = { name: p.name, address: p.address || "", lat: +p.lat, lon: +p.lon, type: p.type || "Place" };
+    write("places", homeWork);
+    renderShortcuts();
+    toast(`${hwLabel[kind]} set: ${p.name}`);
+  }
+  /** One tap: route from where you are now to Home or Work. */
+  function goTo(kind) {
+    const dest = homeWork[kind];
+    if (!dest) {
+      toast(`Search for your ${kind === "home" ? "home" : "workplace"}, open it, then tap \u201CSet as ${kind}\u201D.`);
+      $("#place-search").focus();
+      return;
+    }
+    if (transitModes.includes(mode)) setMode("car");
+    viaStops = []; renderVia();
+    setField("#destination", dest);
+    const go = (here) => { setField("#origin", here); invalidateRoute(); findRoutes(); $(".planner").scrollIntoView({ behavior: "smooth", block: "start" }); };
+    if (myLocation) go(myLocation);
+    else locateMe(go);
+  }
+  const shortcuts = document.createElement("div");
+  shortcuts.className = "hw-shortcuts";
+  $(".transport-modes").after(shortcuts);
+  function renderShortcuts() {
+    shortcuts.innerHTML = ["home", "work"].map((k) => `<button type="button" data-go="${k}" class="${homeWork[k] ? "set" : ""}">${NI(k === "home" ? "heart" : "office")}<span><b>${k === "home" ? "Go home" : "Go to work"}</b><small>${homeWork[k] ? esc(homeWork[k].name) : k === "home" ? "Set home" : "Set work"}</small></span></button>`).join("");
+    shortcuts.querySelectorAll("[data-go]").forEach((b) => b.onclick = () => goTo(b.dataset.go));
+  }
+  renderShortcuts();
   function placeDetails(p) {
-    modal(p.name, `<div class="place-hero"><span>${NI(iconFor(p.type))}</span><div><b>${esc(p.type || "Mapped place")}</b><small>${esc(p.address)}</small></div></div><p class="coordinate-text">${(+p.lat).toFixed(6)}, ${(+p.lon).toFixed(6)}${Number.isFinite(p.distance) ? " \xB7 " + distance(p.distance) + " from selected area" : ""}</p><div class="detail-facts"><div>${NI("clock")}<b>Check opening hours</b><small><a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.name + " " + (p.address || ""))}" target="_blank" rel="noopener">Hours & reviews on Google Maps \u2197</a></small></div><div>${NI("map")}<b>OpenStreetMap place</b><small>Community-maintained map data</small></div></div><div class="detail-actions"><button class="primary" id="place-directions">Directions ${NI("arrow")}</button><button id="place-day">${NI("heart")} Add to day plan</button></div><div class="place-secondary"><button id="place-start">Use as starting point</button><button id="place-explore">Explore around here</button><button id="place-focus">Show on map</button></div><p class="small-print">Place data may be incomplete or outdated. Nearby distances are straight-line distances. Route estimates use road-network speeds without live traffic.</p>`);
+    modal(p.name, `<div class="place-hero"><span>${NI(iconFor(p.type))}</span><div><b>${esc(p.type || "Mapped place")}</b><small>${esc(p.address)}</small></div></div><p class="coordinate-text">${(+p.lat).toFixed(6)}, ${(+p.lon).toFixed(6)}${Number.isFinite(p.distance) ? " \xB7 " + distance(p.distance) + " from selected area" : ""}</p><div class="detail-facts"><div>${NI("clock")}<b>Check opening hours</b><small><a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.name + " " + (p.address || ""))}" target="_blank" rel="noopener">Hours & reviews on Google Maps \u2197</a></small></div><div>${NI("map")}<b>OpenStreetMap place</b><small>Community-maintained map data</small></div></div><div class="detail-actions"><button class="primary" id="place-directions">Directions ${NI("arrow")}</button><button id="place-day">${NI("heart")} Add to day plan</button></div><div class="place-secondary"><button id="place-start">Use as starting point</button><button id="place-explore">Explore around here</button><button id="place-focus">Show on map</button><button id="place-home">${NI("heart")} Set as home</button><button id="place-work">${NI("office")} Set as work</button></div><p class="small-print">Place data may be incomplete or outdated. Nearby distances are straight-line distances. Route estimates use road-network speeds without live traffic.</p>`);
     $("#place-directions").onclick = () => {
       setField("#destination", p);
       invalidateRoute();
@@ -291,6 +323,8 @@
       $("#map").scrollIntoView({ behavior: "smooth", block: "center" });
     };
     $("#place-day").onclick = () => addToDay(p);
+    $("#place-home").onclick = () => setHomeWork("home", p);
+    $("#place-work").onclick = () => setHomeWork("work", p);
   }
   function closeSearch() {
     if (searchState) {
@@ -362,9 +396,15 @@
     const where = searchBias(field);
     state.places = recent.slice(0, 4);
     const recentRows = state.places.map((p, i) => `<button role="option" id="${field.id}-option-${i}" aria-selected="false" data-result="${i}"><span class="suggest-icon">${NI("clock")}</span><div><b>${esc(p.name)}</b><small>${esc(p.type || "Place")} \xB7 ${esc(p.address || "")}</small></div><span>${NI("arrow")}</span></button>`).join("");
-    box.innerHTML = `${recentRows ? `<div class="search-heading">Recent <span><button type="button" class="link-btn" id="clear-recent">Clear</button></span></div>${recentRows}` : ""}<div class="search-heading">Quick search <span>${where ? "near " + esc(where.name) : "Malaysia"}</span></div><div class="quick-chips">${quickSearches.map(([q, label]) => `<button type="button" data-quick="${q}">${label}</button>`).join("")}</div><div class="search-tip">Or type a name, address, postcode, or things like <b>mall dekat JB</b> or <b>petrol near me</b>.</div>`;
+    box.innerHTML = `${recentRows ? `<div class="search-heading">Recent <span><button type="button" class="link-btn" id="clear-recent">Clear</button></span></div>${recentRows}` : ""}<div class="search-heading">Quick search <span>${where ? "near " + esc(where.name) : "Malaysia"}</span></div><div class="quick-chips">${["home", "work"].filter((k) => homeWork[k]).map((k) => `<button type="button" class="hw" data-go-quick="${k}">${NI(k === "home" ? "heart" : "office")} ${hwLabel[k]}</button>`).join("")}${quickSearches.map(([q, label]) => `<button type="button" data-quick="${q}">${label}</button>`).join("")}</div><div class="search-tip">Or type a name, address, postcode, or things like <b>mall dekat JB</b> or <b>petrol near me</b>.</div>`;
     box.querySelectorAll("[data-quick]").forEach((b) => b.onclick = () => { field.value = b.dataset.quick; field.focus(); startSearch(field, true); });
     box.querySelectorAll("[data-result]").forEach((b) => b.onclick = () => pickSearch(state, +b.dataset.result));
+    box.querySelectorAll("[data-go-quick]").forEach((b) => b.onclick = () => {
+      closeSearch();
+      const k = b.dataset.goQuick;
+      if (field.id === "place-search") goTo(k);
+      else { setField("#" + field.id, homeWork[k]); invalidateRoute(); }
+    });
     const clear = box.querySelector("#clear-recent");
     if (clear) clear.onclick = () => { recent = []; write("recent", []); showQuickSearches(field); };
     positionSearch(state);
@@ -413,6 +453,16 @@
       retryAfter(state.box.querySelector("button"), e.retryAfter || 1, () => runSearch(state));
     }
   }
+  let viaStops = [];
+  const viaBox = document.createElement("div");
+  viaBox.className = "via-list";
+  $(".routing-preferences").before(viaBox);
+  function renderVia() {
+    viaBox.hidden = !viaStops.length;
+    viaBox.innerHTML = viaStops.map((v, i) => `<span class="via-chip">${NI("map")}<b>${esc(v.name)}</b><button type="button" data-via-remove="${i}" aria-label="Remove stop ${esc(v.name)}">\u00D7</button></span>`).join("");
+    viaBox.querySelectorAll("[data-via-remove]").forEach((b) => b.onclick = () => { viaStops.splice(+b.dataset.viaRemove, 1); renderVia(); if (fieldPoint("#origin") && fieldPoint("#destination")) findRoutes(); else invalidateRoute(); });
+  }
+  renderVia();
   let recent = read("recent", []);
   if (!Array.isArray(recent)) recent = [];
   recent = recent.filter((p) => p && typeof p.name === "string" && inside(p));
@@ -433,6 +483,7 @@
       if (matchMedia("(max-width:900px)").matches) $("#map").scrollIntoView({ behavior: "smooth", block: "start" });
     } else {
       setField("#" + field.id, p);
+      if (field.id === "destination" && viaStops.length) { viaStops = []; renderVia(); }
       invalidateRoute();
       if (field.id === "destination") setArea(p);
       toast("Exact location selected: " + p.name);
@@ -646,7 +697,7 @@
     $("#routes").innerHTML = '<div class="route-empty loading-state">' + NI("route") + "<p>Calculating road routes\u2026</p></div>";
     $("#planform .primary").disabled = true;
     try {
-      const data = await api("/api/route?" + new URLSearchParams({ fromLat: a.lat, fromLon: a.lon, toLat: b.lat, toLon: b.lon, mode, avoidTolls: $("#avoid-tolls").checked && ["car", "motorbike"].includes(mode) }), routeAbort.signal);
+      const data = await api("/api/route?" + new URLSearchParams({ fromLat: a.lat, fromLon: a.lon, toLat: b.lat, toLon: b.lon, mode, avoidTolls: $("#avoid-tolls").checked && ["car", "motorbike"].includes(mode), ...viaStops.length ? { via: viaStops.map(ll).join("|") } : {} }), routeAbort.signal);
       if (id !== requestId) return;
       routeResults = data.routes;
       chosen = 0;
@@ -704,14 +755,14 @@
     renderServices();
   }
 
-  // ---- Hand-off to turn-by-turn navigation apps ----
+  // ---- Trip actions: navigation stays inside Naviya ----
   const ll = (p) => (+p.lat).toFixed(6) + "," + (+p.lon).toFixed(6);
-  function googleUrl(a, b, travel) {
-    const q = new URLSearchParams({ api: "1", destination: ll(b), travelmode: travel });
-    if (a) q.set("origin", ll(a));
-    return "https://www.google.com/maps/dir/?" + q;
+  /** A Naviya link that reopens this journey (shared journeys, saved links). */
+  function naviyaUrl(a, b, m = mode) {
+    const q = new URLSearchParams({ to: ll(b), toName: b.name, mode: m });
+    if (a && a.name !== "My current location") { q.set("from", ll(a)); q.set("fromName", a.name); }
+    return location.origin + "/explore.html?" + q;
   }
-  const wazeUrl = (b) => "https://waze.com/ul?" + new URLSearchParams({ ll: ll(b), navigate: "yes" });
   const handoff = document.createElement("div");
   handoff.className = "handoff";
   $(".trip-actions").before(handoff);
@@ -720,11 +771,15 @@
     const ready = b && (routeResults.length || transitModes.includes(mode) && a);
     handoff.hidden = !ready;
     if (!ready) return;
-    const travel = { car: "driving", motorbike: "driving", walk: "walking", cycle: "bicycling", train: "transit", bus: "transit" }[mode];
-    handoff.innerHTML = `<span>Start navigating</span>${["car", "motorbike"].includes(mode) ? `<a class="waze" href="${wazeUrl(b)}" target="_blank" rel="noopener">${NI("navigation")} Waze</a>` : ""}<a href="${googleUrl(a, b, travel)}" target="_blank" rel="noopener">${NI("map")} Google Maps${transitModes.includes(mode) ? " \xB7 times & fares" : ""}</a>`;
+    if (transitModes.includes(mode)) {
+      handoff.innerHTML = `<span>Get to the ${mode === "train" ? "station" : "stop"}</span><button type="button" class="nav-start" data-trip="walk-to-stop">${NI("walk")} Walk to the nearest ${mode === "train" ? "station" : "stop"}</button>`;
+      return;
+    }
+    handoff.innerHTML = `<span>Start navigating</span><button type="button" class="nav-start" data-trip="start">${NI("navigation")} Start navigation</button><button type="button" data-trip="preview">${NI("route")} ${["car", "motorbike"].includes(mode) ? "Preview drive" : "Preview route"}</button><button type="button" data-trip="stops">${NI("fuel")} Stops along the way</button>`;
   }
 
   // ---- Public transport: nearby stations + official live vehicle positions ----
+  let transitFirstStop = null;
   const stopKinds = { train: ["station", "halt"], bus: ["bus_stop", "bus_station"] };
   const walkMins = (km) => Math.max(1, Math.round(km * 1.3 / 4.8 * 60));
   async function stationsNear(p, signal) {
@@ -746,6 +801,7 @@
     const [from, to] = await Promise.allSettled([stationsNear(a, routeAbort.signal), stationsNear(b, routeAbort.signal)]);
     if (id !== requestId) return;
     const fromList = from.status === "fulfilled" ? from.value : [], toList = to.status === "fulfilled" ? to.value : [];
+    transitFirstStop = fromList[0] || null;
     const failed = from.status === "rejected" && to.status === "rejected";
     $("#routes").innerHTML = `<div class="transit-plan">${failed ? `<p class="small-print">${esc(from.reason?.message || "Stations could not be loaded.")}</p>` : stationList("Board near " + a.name, a, fromList) + stationList("Get off near " + b.name, b, toList)}<div id="live-vehicles" class="live-vehicles"></div><p class="small-print">Walking times are straight-line estimates. Timetables, transfers and fares open in Google Maps.</p></div>`;
     const lists = { ["Board near " + a.name]: fromList, ["Get off near " + b.name]: toList };
@@ -838,7 +894,7 @@
     $("#planform .primary").firstChild.textContent = road ? "Find my way " : "Plan with public transport ";
     $(".route-heading h3").textContent = road ? "Your route, your choice" : "Your public transport plan";
     $(".routing-preferences").hidden = !["car", "motorbike"].includes(mode);
-    $(".data-note").textContent = road ? (trafficAvailable && mode === "car" ? "Road estimates \xB7 live traffic on the fastest route" : "Road-speed estimates \xB7 open in Waze for live traffic") : "Official live positions \xB7 times & fares via Google Maps";
+    $(".data-note").textContent = road ? (trafficAvailable && mode === "car" ? "Road estimates \xB7 live traffic on the fastest route" : "Road-speed estimates \xB7 live traffic not included") : "Official live positions \xB7 times & fares via Google Maps";
     invalidateRoute();
     $$("[data-mode]").forEach((b) => {
       b.classList.toggle("active", b.dataset.mode === mode);
@@ -886,7 +942,7 @@
     const r = routeResults[chosen];
     if (!r) return;
     const tollNote = r.toll ? r.toll.uses ? `<p><b>Toll roads:</b> ${distance(r.toll.distance / 1e3)}${r.toll.roads.length ? " on " + esc(r.toll.roads.join(", ")) : ""}. Check current rates with the <a href="https://www.llm.gov.my/" target="_blank" rel="noopener">Malaysian Highway Authority \u2197</a>.</p>` : "<p><b>No toll roads</b> on this route.</p>" : "";
-    modal("Your journey steps", `<div class="status-note">${minutes(r.duration)} \xB7 ${(r.distance / 1e3).toFixed(1)} km \xB7 arrive ~${clock(r.duration)}</div>${tollNote}<ol class="timeline">${r.steps.map((s) => `<li class="${s.toll ? "toll-step" : ""}">${esc(stepText(s))}${s.type === "arrive" ? "" : `<small>${distance(s.distance / 1e3)}</small>`}</li>`).join("")}</ol><p class="small-print">For voice guidance, use Start navigating \u2192 Waze or Google Maps.</p>${["car", "motorbike"].includes(mode) ? '<button id="fuel-tool" class="primary">Estimate fuel cost</button>' : ""}`);
+    modal("Your journey steps", `<div class="status-note">${minutes(r.duration)} \xB7 ${(r.distance / 1e3).toFixed(1)} km \xB7 arrive ~${clock(r.duration)}</div>${tollNote}<ol class="timeline">${r.steps.map((s) => `<li class="${s.toll ? "toll-step" : ""}">${esc(stepText(s))}${s.type === "arrive" ? "" : `<small>${distance(s.distance / 1e3)}</small>`}</li>`).join("")}</ol><p class="small-print">Tap Start navigation for turn-by-turn voice guidance.</p>${["car", "motorbike"].includes(mode) ? '<button id="fuel-tool" class="primary">Estimate fuel cost</button>' : ""}`);
     if (!$("#fuel-tool")) return;
     $("#fuel-tool").onclick = () => {
       modal("Journey cost estimate", `<p>Based on the selected ${(r.distance / 1e3).toFixed(1)} km road route. Pick this week\u2019s official price or enter your own.</p><label>Fuel economy \xB7 litres per 100 km<input id="economy" type="number" min="1" max="50" step="0.1" value="${mode === "motorbike" ? 2.5 : 6.5}"></label><label>Fuel price \xB7 RM per litre<input id="fuel-price" type="number" min="0.1" max="30" step="0.01" placeholder="Enter or pick a price"></label><div id="fuel-official" class="fuel-official"><small>Loading this week's official prices\u2026</small></div><button class="primary" id="calculate-fuel">Calculate fuel estimate</button><div id="fuel-result" aria-live="polite"></div><p>${r.toll?.uses ? "<b>This route uses toll roads.</b> Tolls are not included" : "No toll roads on this route"}. Parking and other costs are not included.</p>`);
@@ -965,7 +1021,7 @@
     if (navigator.share && matchMedia("(pointer:coarse)").matches) {
       const b = fieldPoint("#destination");
       try {
-        await navigator.share({ title: "Naviya journey", text: `${$("#origin").value} \u2192 ${$("#destination").value} \xB7 ${modeLabel[mode]} \xB7 about ${minutes(r.duration)}`, url: googleUrl(fieldPoint("#origin"), b, { car: "driving", motorbike: "driving", walk: "walking", cycle: "bicycling" }[mode]) });
+        await navigator.share({ title: "Naviya journey", text: `${$("#origin").value} \u2192 ${$("#destination").value} \xB7 ${modeLabel[mode]} \xB7 about ${minutes(r.duration)}`, url: naviyaUrl(fieldPoint("#origin"), b) });
         return;
       } catch (e) {
         if (e.name === "AbortError") return;
@@ -974,7 +1030,7 @@
     const b = fieldPoint("#destination");
     const text = `Naviya: ${$("#origin").value} \u2192 ${$("#destination").value}
 ${modeLabel[mode]} \xB7 ${(r.distance / 1e3).toFixed(1)} km \xB7 about ${minutes(r.duration)}${r.toll ? r.toll.uses ? " \xB7 uses toll roads" : " \xB7 no tolls" : ""}
-${b ? googleUrl(fieldPoint("#origin"), b, { car: "driving", motorbike: "driving", walk: "walking", cycle: "bicycling" }[mode]) : ""}`;
+${b ? naviyaUrl(fieldPoint("#origin"), b) : ""}`;
     try {
       await navigator.clipboard.writeText(text);
       toast("Journey copied.");
@@ -983,7 +1039,7 @@ ${b ? googleUrl(fieldPoint("#origin"), b, { car: "driving", motorbike: "driving"
     }
   };
   function dayPlan() {
-    modal("Your day, your places.", `<p>Saved on this browser. Reorder places or explore around your next stop. </p>${day.filter(inside).length >= 2 ? `<a class="primary day-route" href="${dayRouteUrl()}" target="_blank" rel="noopener">${NI("route")} Directions for the whole day \u2197</a>` : ""}${day.length ? day.map((p, i) => `<div class="day-item"><span>${i + 1}</span><b>${esc(p.name)}</b><button data-day-up="${i}" ${i === 0 ? "disabled" : ""} aria-label="Move ${esc(p.name)} earlier">\u2191</button><button data-day-open="${i}" aria-label="Explore ${esc(p.name)}">\u2197</button><button data-day-remove="${i}" aria-label="Remove ${esc(p.name)}">\xD7</button></div>`).join("") : '<div class="empty">Open any real place and add it to your day.</div>'}`);
+    modal("Your day, your places.", `<p>Saved on this browser. Reorder places or explore around your next stop. </p>${day.filter(inside).length ? `<button type="button" class="primary day-route" data-trip="day">${NI("navigation")} Navigate the day</button>` : ""}${day.length ? day.map((p, i) => `<div class="day-item"><span>${i + 1}</span><b>${esc(p.name)}</b><button data-day-up="${i}" ${i === 0 ? "disabled" : ""} aria-label="Move ${esc(p.name)} earlier">\u2191</button><button data-day-open="${i}" aria-label="Explore ${esc(p.name)}">\u2197</button><button data-day-remove="${i}" aria-label="Remove ${esc(p.name)}">\xD7</button></div>`).join("") : '<div class="empty">Open any real place and add it to your day.</div>'}`);
     $$("[data-day-up]").forEach((b) => b.onclick = () => {
       const i = +b.dataset.dayUp;
       if (i > 0) [day[i - 1], day[i]] = [day[i], day[i - 1]];
@@ -1006,12 +1062,6 @@ ${b ? googleUrl(fieldPoint("#origin"), b, { car: "driving", motorbike: "driving"
         startSearch($("#place-search"), true);
       }
     });
-  }
-  function dayRouteUrl() {
-    const stops = day.filter(inside).slice(0, 10);
-    const q = new URLSearchParams({ api: "1", origin: ll(stops[0]), destination: ll(stops[stops.length - 1]), travelmode: "driving" });
-    if (stops.length > 2) q.set("waypoints", stops.slice(1, -1).map(ll).join("|"));
-    return "https://www.google.com/maps/dir/?" + q;
   }
   $("#itinerary-open").onclick = dayPlan;
   $("#day-count").textContent = day.length;
@@ -1054,8 +1104,10 @@ ${b ? googleUrl(fieldPoint("#origin"), b, { car: "driving", motorbike: "driving"
     ["ticket", "Toll-road check", "on", "Shows if a route uses tolls; rates via LLM"],
     ["camera", "Fixed speed cameras", "on", "Mapped cameras near your route"],
     ["bus", "Live buses & KTM trains", "on", "Official data.gov.my positions"],
-    ["calendar", "Timetables & fares", "link", "Opens in Google Maps"],
-    trafficAvailable ? ["navigation", "Live traffic", "on", "Map overlay & delay on fastest route"] : ["navigation", "Live traffic", "link", "Open your route in Waze"],
+    ["navigation", "Turn-by-turn navigation", "on", "Voice guidance in English or Bahasa Melayu"],
+    ["museum", "Prayer times & surau on route", "on", "JAKIM parameters, calculated on your device"],
+    ["fuel", "R&R and petrol along the way", "on", "From OpenStreetMap"],
+    trafficAvailable ? ["navigation", "Live traffic", "on", "Map overlay & delay on fastest route"] : ["navigation", "Live traffic", "off", "Needs a traffic data provider"],
     ["lanes", "Smart Lane status", "off", "No official feed \xB7 follow highway signs"]
   ];
   const statusText = { on: "Live", link: "Via app", off: "Not available" };
@@ -1066,11 +1118,11 @@ ${b ? googleUrl(fieldPoint("#origin"), b, { car: "driving", motorbike: "driving"
     $("#smart-details").onclick = highwayStatus;
   }
   function highwayStatus() {
-    modal("Highway & live information", `${serviceList()}<p><b>Toll rates</b> are published by the <a href="https://www.llm.gov.my/" target="_blank" rel="noopener">Malaysian Highway Authority (LLM) \u2197</a>. Naviya tells you whether a route uses toll roads, but does not guess prices.</p><p><b>Smart Lane</b> openings are announced by highway operators on the road and in their own apps, such as <a href="https://www.plus.com.my/" target="_blank" rel="noopener">PLUS \u2197</a>. There is no public data feed, so Naviya does not show a status.</p><p><b>Live traffic</b>${trafficAvailable ? " comes from TomTom. Turn it on with the Live traffic button on the map." : " is not built in yet. Open your route in Waze for live traffic and police/hazard reports."}</p>`);
+    modal("Highway & live information", `${serviceList()}<p><b>Toll rates</b> are published by the <a href="https://www.llm.gov.my/" target="_blank" rel="noopener">Malaysian Highway Authority (LLM) \u2197</a>. Naviya tells you whether a route uses toll roads, but does not guess prices.</p><p><b>Smart Lane</b> openings are announced by highway operators on the road and in their own apps, such as <a href="https://www.plus.com.my/" target="_blank" rel="noopener">PLUS \u2197</a>. There is no public data feed, so Naviya does not show a status.</p><p><b>Live traffic</b>${trafficAvailable ? " comes from TomTom. Turn it on with the Live traffic button on the map." : " is not connected yet. Route times use road speeds."}</p>`);
   }
   renderServices();
   function privacy() {
-    modal("Your journey, with clarity.", `<p>Search text and chosen map coordinates are sent through Naviya to Photon; route endpoints are sent to the road-routing provider. Driving-route geometry is sent to OpenStreetMap/Overpass (currently Private.coffee) to check mapped fixed cameras. In train and bus mode, the selected area is used by Naviya's server to filter official data.gov.my vehicle feeds; your location is not sent to data.gov.my. If live traffic is switched on, route endpoints are sent to TomTom. Navigation buttons open Waze or Google Maps, which then receive your destination under their own privacy policies. Search and route responses may be cached in server memory for up to one hour, without account identifiers. Shared service quotas store request counts, not search histories. Your account identity is not forwarded to those services. <a href="https://overpass.private.coffee/#privacy-policy" target="_blank" rel="noopener">Camera provider privacy information \u2197</a></p><p>Map tiles contact OpenStreetMap directly, exposing your IP address and viewed map area. Google Fonts is also used. Device location is requested only when you choose \u201CUse my location\u201D; the app does not track you in the background.</p><p>Saved journeys, recent searches, day plans, observations and theme preferences stay in this browser. Some saved places may contain precise coordinates. Signing out does not clear device-local records. Account profiles and points are stored separately on the server.</p><div class="privacy-actions"><button id="export-local" class="primary">Export device data</button><button id="clear-local">Clear saved data on this device</button></div>`);
+    modal("Your journey, with clarity.", `<p>Search text and chosen map coordinates are sent through Naviya to Photon; route endpoints are sent to the road-routing provider. Driving-route geometry is sent to OpenStreetMap/Overpass (currently Private.coffee) to check mapped fixed cameras. In train and bus mode, the selected area is used by Naviya's server to filter official data.gov.my vehicle feeds; your location is not sent to data.gov.my. If live traffic is switched on, route endpoints are sent to TomTom. During navigation your position is used on this device to follow the route; it is sent to the routing provider only as a new starting point when Naviya recalculates after a wrong turn. Prayer times are calculated on your device. Search and route responses may be cached in server memory for up to one hour, without account identifiers. Shared service quotas store request counts, not search histories. Your account identity is not forwarded to those services. <a href="https://overpass.private.coffee/#privacy-policy" target="_blank" rel="noopener">Camera provider privacy information \u2197</a></p><p>Map tiles contact OpenStreetMap directly, exposing your IP address and viewed map area. Google Fonts is also used. Device location is requested only when you choose \u201CUse my location\u201D; the app does not track you in the background.</p><p>Saved journeys, Home and Work, recent searches, day plans, observations and theme preferences stay in this browser. Some saved places may contain precise coordinates. Signing out does not clear device-local records. Account profiles and points are stored separately on the server.</p><div class="privacy-actions"><button id="export-local" class="primary">Export device data</button><button id="clear-local">Clear saved data on this device</button></div>`);
     $("#export-local").onclick = () => {
       const url = URL.createObjectURL(new Blob([JSON.stringify({ savedJourneys: saved, dayPlan: day, observations: reports, exportedAt: new Date().toISOString() }, null, 2)], { type: "application/json" }));
       const a = document.createElement("a");
@@ -1086,6 +1138,9 @@ ${b ? googleUrl(fieldPoint("#origin"), b, { car: "driving", motorbike: "driving"
       reports = [];
       recent = [];
       write("recent", []);
+      homeWork = {};
+      write("places", {});
+      renderShortcuts();
       write("saved", []);
       write("day", []);
       write("reports", []);
@@ -1096,7 +1151,7 @@ ${b ? googleUrl(fieldPoint("#origin"), b, { car: "driving", motorbike: "driving"
   }
   $("#privacy").onclick = privacy;
   function dataInfo() {
-    modal("What Naviya can do today", `<div class="status-note">Real places, road routes and official live transit \xB7 Malaysia</div><p><b>Search & nearby:</b> Photon / OpenStreetMap across Peninsular Malaysia, Sabah and Sarawak. Nearby results are ranked by straight-line distance. Coverage can be incomplete and opening hours are not verified.</p><p><b>Routes:</b> OSRM road-network routing for driving, riding, walking and cycling, with arrival time and a toll-road check from OpenStreetMap road data. Riding uses the car road network. Toll rates are not estimated.</p><p><b>Speed cameras:</b> fixed cameras mapped in OpenStreetMap (via Overpass) within 50 m of your route. Direction and operation are unverified; mobile traps are excluded.</p><p><b>Public transport:</b> live bus and KTM train positions from the official <a href="https://developer.data.gov.my/realtime-api/gtfs-realtime" target="_blank" rel="noopener">data.gov.my GTFS Realtime API \u2197</a> (Rapid KL, MRT feeder, Rapid Penang, BAS.MY and KTMB), refreshed every 30 seconds. These feeds do not include arrival predictions, so timetables and fares open in Google Maps. LRT/MRT trains do not publish live positions yet.</p><p><b>Live traffic:</b> ${trafficAvailable ? "TomTom traffic flow and delay estimates." : "not built in. Use Start navigating \u2192 Waze."} <b>Smart Lane:</b> no public feed exists, so no status is shown.</p><p>Public services have usage limits and no uptime guarantee.</p><p><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap attribution \u2197</a> \xB7 <a href="https://project-osrm.org/" target="_blank" rel="noopener">OSRM \u2197</a> \xB7 <a href="https://data.gov.my/" target="_blank" rel="noopener">data.gov.my \u2197</a></p>`);
+    modal("What Naviya can do today", `<div class="status-note">Real places, road routes and official live transit \xB7 Malaysia</div><p><b>Search & nearby:</b> Photon / OpenStreetMap across Peninsular Malaysia, Sabah and Sarawak. Nearby results are ranked by straight-line distance. Coverage can be incomplete and opening hours are not verified.</p><p><b>Routes:</b> OSRM road-network routing for driving, riding, walking and cycling, with arrival time and a toll-road check from OpenStreetMap road data. Riding uses the car road network. Toll rates are not estimated.</p><p><b>Speed cameras:</b> fixed cameras mapped in OpenStreetMap (via Overpass) within 50 m of your route. Direction and operation are unverified; mobile traps are excluded.</p><p><b>Public transport:</b> live bus and KTM train positions from the official <a href="https://developer.data.gov.my/realtime-api/gtfs-realtime" target="_blank" rel="noopener">data.gov.my GTFS Realtime API \u2197</a> (Rapid KL, MRT feeder, Rapid Penang, BAS.MY and KTMB), refreshed every 30 seconds. These feeds do not include arrival predictions, so timetables and fares open in Google Maps. LRT/MRT trains do not publish live positions yet.</p><p><b>Live traffic:</b> ${trafficAvailable ? "TomTom traffic flow and delay estimates." : "not connected yet; times use road speeds."} <b>Smart Lane:</b> no public feed exists, so no status is shown.</p><p>Public services have usage limits and no uptime guarantee.</p><p><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap attribution \u2197</a> \xB7 <a href="https://project-osrm.org/" target="_blank" rel="noopener">OSRM \u2197</a> \xB7 <a href="https://data.gov.my/" target="_blank" rel="noopener">data.gov.my \u2197</a></p>`);
   }
   $("#data-info").onclick = dataInfo;
   $("#preview-info").onclick = dataInfo;
@@ -1133,6 +1188,28 @@ ${b ? googleUrl(fieldPoint("#origin"), b, { car: "driving", motorbike: "driving"
   $("#map-state").textContent = "Zoom in for streets and mapped buildings. Select a search result to focus.";
   $("#map-reset").innerHTML = NI("locate");
   window.Naviya = {
+    state: () => ({ route: routeResults[chosen] || null, routes: routeResults, mode, origin: fieldPoint("#origin"), destination: fieldPoint("#destination"), via: [...viaStops], avoidTolls: $("#avoid-tolls").checked, myLocation, day: day.filter(inside) }),
+    async fetchRoute(from, to, m, via = []) {
+      const data = await api("/api/route?" + new URLSearchParams({ fromLat: from.lat, fromLon: from.lon, toLat: to.lat, toLon: to.lon, mode: m, avoidTolls: $("#avoid-tolls").checked && ["car", "motorbike"].includes(m), ...via.length ? { via: via.map(ll).join("|") } : {} }));
+      return data.routes;
+    },
+    plan(from, to, m) {
+      if (m && modeLabel[m]) setMode(m);
+      viaStops = []; renderVia();
+      setField("#destination", to);
+      if (from) { setField("#origin", from); invalidateRoute(); setArea(to, false); findRoutes(); }
+      else { invalidateRoute(); setArea(to); toast("Choose a starting point, or tap Use my location."); }
+    },
+    addVia(p) {
+      if (viaStops.length >= 3) return toast("You can add up to 3 stops.");
+      if (viaStops.some((v) => v.lat === p.lat && v.lon === p.lon)) return toast("Already a stop on this route.");
+      viaStops.push({ name: p.name, lat: +p.lat, lon: +p.lon });
+      renderVia();
+      findRoutes();
+    },
+    setMyLocation(p) { myLocation = p; },
+    nearestStop: () => transitFirstStop,
+    api, toast, modal, esc, clock, minutes, distance, stepText, modeLabel, setArea,
     search(q) { const f = $("#place-search"); f.value = q; f.focus(); startSearch(f, true); },
     savedJourneys() { savedJourneys(); },
     locate() { locateMe(); },

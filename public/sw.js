@@ -1,8 +1,8 @@
 /* Naviya service worker: makes the app installable and lets it open without a connection.
    Pages: network first (always newest when online). Static files: served from cache, refreshed in the background.
    API calls and map tiles are never cached here (live data, and OpenStreetMap's tile policy). */
-const VERSION = 'naviya-v1';
-const SHELL = ['/explore.html', '/style.css', '/icons.css', '/icons.svg', '/icons.js', '/malaysia.css', '/search-layout.css', '/responsive.css', '/phone-qr.css', '/journey.css', '/mobile.css', '/malaysia.js', '/account-link.js', '/mobile-nav.js', '/phone-qr.js', '/app-shell.js', '/favicon.svg', '/vendor/leaflet.css', '/vendor/leaflet.js', '/manifest.webmanifest', '/app-icons/icon-192.png'];
+const VERSION = 'naviya-v2';
+const SHELL = ['/explore.html', '/style.css', '/icons.css', '/icons.svg', '/icons.js', '/malaysia.css', '/search-layout.css', '/responsive.css', '/phone-qr.css', '/journey.css', '/mobile.css', '/malaysia.js', '/account-link.js', '/mobile-nav.js', '/phone-qr.js', '/app-shell.js', '/i18n.js', '/prayer.js', '/trip.js', '/favicon.svg', '/vendor/leaflet.css', '/vendor/leaflet.js', '/manifest.webmanifest', '/app-icons/icon-192.png'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(VERSION).then((cache) => cache.addAll(SHELL)).then(() => self.skipWaiting()));

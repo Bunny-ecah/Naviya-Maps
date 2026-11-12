@@ -6,9 +6,9 @@ export function segmentDistance(p:Point,a:Point,b:Point){
  return Math.hypot(px-t*x,py-t*y);
 }
 // Iterative Douglas–Peucker: the query corridor includes the maximum 15 m simplification error.
-export function simplify(points:Point[]){
+export function simplify(points:Point[],tolerance=15){
  const keep=new Set([0,points.length-1]),stack=[[0,points.length-1]];
- while(stack.length){const [a,b]=stack.pop()!;let max=15,index=-1;for(let i=a+1;i<b;i++){const d=segmentDistance(points[i],points[a],points[b]);if(d>max){max=d;index=i}}
+ while(stack.length){const [a,b]=stack.pop()!;let max=tolerance,index=-1;for(let i=a+1;i<b;i++){const d=segmentDistance(points[i],points[a],points[b]);if(d>max){max=d;index=i}}
  if(index>=0){keep.add(index);stack.push([a,index],[index,b])}}
  return [...keep].sort((a,b)=>a-b).map(i=>points[i]);
 }

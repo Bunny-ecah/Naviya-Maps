@@ -27,11 +27,15 @@ Verified in Chromium viewport previews at 320, 390, 768, 1024 and 1366 px, inclu
 - Real **driving, riding (motorcycle), walking and cycling** route geometry, road distances, journey durations, **arrival times**, alternatives and readable turn instructions through OSRM services. Riding uses the car road network and says so.
 - **Toll-road check** on every driving/riding route: whether it uses tolled roads, for how far and on which highways (from OpenStreetMap `toll` road classes). Toll rates are not estimated; the journey dialog links to LLM. Riding routes note that most highways are toll-free for motorcycles.
 - Toll-avoidance requests where supported by the routing provider. An unsupported request produces an explicit error; it is never silently replaced with an ordinary route.
-- **Start navigating** hand-off: open the chosen journey in Waze (live traffic, voice guidance) or Google Maps (all modes, including transit timetables and fares). Phones use the native share sheet for sharing.
+- **In-app turn-by-turn navigation** (`public/trip.js`): follows your GPS, shows the next turn with distance, speaks instructions in English or Bahasa Melayu, recalculates after a wrong turn, keeps the screen on, shows live arrival time, and lets you add stops or share your ETA (WhatsApp / share sheet) mid-trip. **Preview drive** simulates the trip at 4× speed for checking a route at a desk.
+- **Home & Work**: set from any place's details; one tap "Go home" / "Go to work" routes from where you are.
+- **Stops along the way** (`app/api/along-route`): R&R, petrol, surau/masjid and EV chargers along the route with km and expected time; add one as a stop (up to 3 via points).
+- **Prayer times on the trip** (`public/prayer.js`): Subuh, Zohor, Asar, Maghrib and Isyak that begin during the journey, where you will be, and the next surau or R&R. Calculated on the device with JAKIM parameters (18°/18°, Shafi'i Asar, ihtiyat); matches e-Solat for Kuala Lumpur in testing, may differ by a minute.
+- **Bahasa Melayu**: BM/EN switch in the header and More menu (`public/i18n.js`).
 - **Train and bus planner**: stations/stops near both ends with walking distance, plus **live KTM train and bus positions** from the official data.gov.my GTFS Realtime API (Rapid KL, MRT feeder, Rapid Penang, BAS.MY in nine cities and KTMB), refreshed every 30 seconds and drawn on the map.
 - **Live traffic (optional)**: with a TomTom key configured on the server, a traffic-flow map overlay and current-traffic time/delay on the fastest driving route.
 - Fuel-cost estimates based on the calculated route distance and the user's fuel economy and price (motorcycle default 2.5 L/100 km). Toll costs are not included.
-- Day plans can open as a single multi-stop Google Maps route.
+- Day plans can be navigated stop by stop ("Navigate the day").
 - A **Live services** panel (More menu on phones) that shows exactly what is switched on.
 - Exact-coordinate saved journeys, reorderable day plans and local road observations. Observations expire after two hours and are not broadcast to other users.
 - Device location only when the visitor explicitly chooses **Use my location**. No background tracking.
@@ -43,12 +47,14 @@ The earlier fixed sample catalogue, mock traffic overlay, simulated route choice
 
 - **Toll prices**: LLM publishes rates, but there is no public data feed. Naviya shows whether a route uses tolls, never a guessed price.
 - **Smart Lane activation**: highway operators announce it on signs and in their own apps; no public feed exists.
-- **Arrival predictions for buses/trains**: data.gov.my publishes vehicle positions only. Timetables and fares open in Google Maps. LRT/MRT trains have no live position feed yet.
-- **Live traffic without a key**: free public traffic data does not exist; visitors are pointed to Waze instead.
+- **Arrival predictions for buses/trains**: data.gov.my publishes vehicle positions only. Naviya shows stops and live positions and can walk you to the nearest stop; LRT/MRT trains have no live position feed yet.
+- **Live traffic without a key**: free public traffic data does not exist; route times use road speeds until a provider key is configured.
 - **Motorcycle-specific restrictions**: no public router models roads closed to motorcycles. Riding routes are labelled as car-network routes.
 - **Mobile speed traps**: only fixed cameras mapped in OpenStreetMap are shown.
 
-Naviya is a planner, not a turn-by-turn navigation app; voice navigation is handed to Waze or Google Maps. Search returns up to 24 matches from the provider index and is not a complete national building registry. A full commercial launch requires dedicated service capacity, operational monitoring and field validation.
+- **Shared road reports and flood alerts**: reports stay on the device until accounts, moderation and a shared store are added; no open JPS/Public Infobanjir API is published for flood alerts.
+
+Navigation runs in the browser, so keep Naviya open on screen while driving (phones pause web pages in the background). Use a phone holder and do not interact while moving. Search returns up to 24 matches from the provider index and is not a complete national building registry. A full commercial launch requires dedicated service capacity, operational monitoring and field validation.
 
 ## Run locally
 
@@ -80,6 +86,7 @@ node tests/road-routing.test.mjs
 node tests/transit-and-tolls.test.mjs
 node tests/search-intent.test.mjs
 node tests/provider-missing-table.test.mjs
+node tests/along-route.test.mjs
 npm run build
 ```
 
@@ -111,11 +118,11 @@ Integration scripts target the local preview only. The Malaysia integration chec
 
 The full app needs a Worker-compatible runtime, a `DB` D1 binding and supported authentication dispatch. GitHub Pages cannot run its API or account system. Sites hosting is configured through `.openai/hosting.json`; GitHub export copies omit the production project ID.
 
-The default Photon and OSRM public services are for reasonable small, non-commercial use and have no availability guarantee. Search and nearby results use bounded caches. Route requests use a short per-instance rate gate and bounded caches; this is not a global, cross-region commercial quota system. Configure dedicated router base URLs through `NAVIYA_ROUTER_CAR_URL`, `NAVIYA_ROUTER_WALK_URL` and `NAVIYA_ROUTER_CYCLE_URL` for production scale. Each base must expose the appropriate OSRM profile at `/route/v1/driving`. Live transit uses `https://api.data.gov.my/gtfs-realtime/vehicle-position/` by default (override with `NAVIYA_GTFS_RT_URL`). To switch on live traffic, add `NAVIYA_TOMTOM_KEY` as a secret in the hosting environment settings (TomTom offers a free developer tier; check their current limits). Without it, the app shows Waze hand-off instead.
+The default Photon and OSRM public services are for reasonable small, non-commercial use and have no availability guarantee. Search and nearby results use bounded caches. Route requests use a short per-instance rate gate and bounded caches; this is not a global, cross-region commercial quota system. Configure dedicated router base URLs through `NAVIYA_ROUTER_CAR_URL`, `NAVIYA_ROUTER_WALK_URL` and `NAVIYA_ROUTER_CYCLE_URL` for production scale. Each base must expose the appropriate OSRM profile at `/route/v1/driving`. Live transit uses `https://api.data.gov.my/gtfs-realtime/vehicle-position/` by default (override with `NAVIYA_GTFS_RT_URL`). To switch on live traffic, add `NAVIYA_TOMTOM_KEY` as a secret in the hosting environment settings (TomTom offers a free developer tier; check their current limits). Without it, routes use road-speed estimates.
 
 ## Privacy
 
-Search queries and nearby coordinates are forwarded through Naviya to Photon. Route endpoints go to the routing provider, and to TomTom when live traffic is switched on. In train/bus mode the server filters the public data.gov.my feeds; visitor locations are not sent there. Waze and Google Maps receive a destination only when the visitor taps a Start navigating button. Account identity is not forwarded. Map tiles contact OpenStreetMap directly and expose the visitor IP and viewed map area. Google Fonts is also loaded.
+Search queries and nearby coordinates are forwarded through Naviya to Photon. Route endpoints go to the routing provider, and to TomTom when live traffic is switched on. In train/bus mode the server filters the public data.gov.my feeds; visitor locations are not sent there. During navigation the GPS position stays on the device except as a new starting point when Naviya recalculates a route; route geometry is sent to Overpass to find stops along the way. Prayer times are calculated on the device. Account identity is not forwarded. Map tiles contact OpenStreetMap directly and expose the visitor IP and viewed map area. Google Fonts is also loaded.
 
 Exact saved journey locations, day plans, observations and theme preferences are stored in the browser. Signing out does not erase those local records; Privacy controls can clear them. Server records consist of the account profile and points ledger. No application password is collected.
 

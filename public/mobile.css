@@ -69,6 +69,9 @@
   #toast{bottom:calc(88px + env(safe-area-inset-bottom));max-width:calc(100% - 32px);text-align:center}
 }
 
+/* Language toggle */
+.lang-toggle{font-weight:800;font-size:12px;letter-spacing:.5px;color:var(--purple)}
+
 /* Installed app: no "open on your phone" prompts */
 body.installed-app .phone-qr,body.installed-app #phone-qr-open{display:none!important}
 
