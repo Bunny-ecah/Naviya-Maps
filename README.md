@@ -114,6 +114,23 @@ Integration scripts target the local preview only. The Malaysia integration chec
 
 `public/malaysia.js` owns the nationwide map, search, discovery and journey interface. `app/api/search`, `app/api/nearby`, `app/api/route`, `app/api/transit` and `app/api/traffic` provide the server endpoints. `lib/place-search.ts`, `lib/road-routing.ts` and `lib/gtfs-realtime.ts` normalize provider data. `public/journey.css` styles the route, transit and live-services additions. `public/vendor` includes Leaflet and its licence. The icon licence is in `public/icons-LICENSE.txt`; `scripts/build-icons.mjs` regenerates the SVG sprite.
 
+## Publish as a public website (your own Cloudflare account)
+
+```bash
+npm ci
+npm run deploy:public
+```
+
+The first run opens a browser to log in to Cloudflare (a free account is enough), creates the `naviya-db` D1 database, builds, creates the tables and deploys. It prints the address, for example `https://naviya.<your-name>.workers.dev/explore.html`. Run the same command after every update. Settings live in `naviya.public.json` (no secrets): the worker name, database name, and optional provider addresses.
+
+On this self-hosted site:
+
+- ChatGPT sign-in is not available, so account and points pages are hidden, and any `oai-authenticated-*` header sent by a visitor is removed (`lib/public-hosting.ts`).
+- Before sharing widely, set a map tile provider in `naviya.public.json`. For example, with a free MapTiler key: `"NAVIYA_TILE_URL": "https://api.maptiler.com/maps/streets-v2/256/{z}/{x}/{y}.png?key=YOUR_KEY"` and `"NAVIYA_TILE_ATTRIBUTION": "© MapTiler © OpenStreetMap contributors"`. Without it, the community OpenStreetMap tiles are used, which suit light traffic only. Restrict the key to your site's domain in the provider's dashboard.
+- For more traffic, point `NAVIYA_PHOTON_URL`, `NAVIYA_ROUTER_*_URL` and `NAVIYA_OVERPASS_URL` at dedicated services. The public demo services have no guarantee and can block heavy use.
+- Optional live traffic: `npm run deploy:public -- --secret NAVIYA_TOMTOM_KEY` (asks you to paste the key).
+- Privacy policy and terms: `/privacy.html`.
+
 ## Deployment and provider capacity
 
 The full app needs a Worker-compatible runtime, a `DB` D1 binding and supported authentication dispatch. GitHub Pages cannot run its API or account system. Sites hosting is configured through `.openai/hosting.json`; GitHub export copies omit the production project ID.

@@ -15,7 +15,19 @@ const { d1, r2 } = hostingConfig;
 const isCodexSeatbeltSandbox = process.env.CODEX_SANDBOX === "seatbelt";
 const managedLinux = readExecutionProfile() === "managed-linux";
 
-const localBindingConfig = {
+// Set by scripts/deploy-public.mjs for a self-hosted public Cloudflare deployment.
+const publicDeploy: null | { workerName: string; databaseName: string; databaseId: string; vars?: Record<string, string> } =
+  process.env.NAVIYA_PUBLIC_DEPLOY ? JSON.parse(process.env.NAVIYA_PUBLIC_DEPLOY) : null;
+
+const localBindingConfig = publicDeploy ? {
+  name: publicDeploy.workerName,
+  main: "./worker/index.ts",
+  compatibility_date: "2026-05-15",
+  compatibility_flags: ["nodejs_compat"],
+  d1_databases: [{ binding: "DB", database_name: publicDeploy.databaseName, database_id: publicDeploy.databaseId }],
+  r2_buckets: [],
+  vars: { ...(publicDeploy.vars || {}), NAVIYA_PUBLIC_HOSTING: "true" },
+} : {
   main: "./worker/index.ts",
   compatibility_flags: ["nodejs_compat"],
   d1_databases: d1

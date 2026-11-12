@@ -84,3 +84,7 @@ body.installed-app .phone-qr,body.installed-app #phone-qr-open{display:none!impo
 .fuel-official .quick-chips button{min-height:36px;padding:0 12px;border-radius:18px;border:1px solid var(--line);background:var(--surface);color:var(--text);font-size:12px;cursor:pointer}
 .fuel-official .quick-chips button b{color:var(--purple);margin-left:4px}
 .fuel-official .quick-chips button.active{border-color:var(--purple);background:var(--purple-soft)}
+
+/* Self-hosted public site without sign-in */
+body.no-accounts .mobile-more-menu a[href="/account"],body.no-accounts .account-entry{display:none!important}
+footer .footer-link{color:var(--purple);font-size:12px;font-weight:600;text-decoration:none}

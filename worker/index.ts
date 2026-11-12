@@ -1,5 +1,6 @@
 import handler from "vinext/server/fetch-handler";
 import { runWithConnectorBinding } from "../lib/connector-context";
+import { stripIdentityHeaders } from "../lib/public-hosting";
 import type { ConnectorBinding } from "../lib/connector-contract.mjs";
 
 const worker = {
@@ -23,6 +24,8 @@ const worker = {
         },
       };
     }
+    // Self-hosted public deployment: identity headers are only trustworthy when the ChatGPT Sites platform adds them.
+    request = stripIdentityHeaders(request, (env as unknown as Record<string, unknown>).NAVIYA_PUBLIC_HOSTING === "true");
     return runWithConnectorBinding(binding, () => handler.fetch(request, env, ctx));
   },
 };

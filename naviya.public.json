@@ -1,0 +1,14 @@
+{
+  "workerName": "naviya",
+  "databaseName": "naviya-db",
+  "vars": {
+    "NAVIYA_TILE_URL": "",
+    "NAVIYA_TILE_ATTRIBUTION": "",
+    "NAVIYA_TILE_MAX_ZOOM": "19",
+    "NAVIYA_PHOTON_URL": "",
+    "NAVIYA_ROUTER_CAR_URL": "",
+    "NAVIYA_ROUTER_WALK_URL": "",
+    "NAVIYA_ROUTER_CYCLE_URL": "",
+    "NAVIYA_OVERPASS_URL": ""
+  }
+}

@@ -1,6 +1,6 @@
 # Naviya readiness and provider setup
 
-The hosted site is private to its owner. Preserve this audience when deploying. Account profiles and rewards require the platform identity; journeys and day plans remain on the device.
+The ChatGPT Sites deployment is private to its owner. For a public website use `npm run deploy:public` (see README), which hosts Naviya on your own Cloudflare account without ChatGPT sign-in. Account profiles and rewards require the platform identity; journeys and day plans remain on the device.
 
 ## Working and tested
 

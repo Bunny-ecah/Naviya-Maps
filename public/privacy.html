@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#7448d9">
+<title>Naviya — Privacy &amp; terms</title>
+<meta name="description" content="How Naviya handles your searches, location and saved places, and the terms for using it.">
+<link rel="icon" href="/favicon.svg">
+<link rel="manifest" href="/manifest.webmanifest">
+<style>
+:root{--bg:#faf9fd;--surface:#fff;--text:#252136;--muted:#6f6a80;--line:#eeeaf5;--purple:#794bd6;--soft:#f2ecfc}
+@media (prefers-color-scheme:dark){:root{--bg:#14121d;--surface:#211d2d;--text:#f0ecf9;--muted:#aaa2bb;--line:#342d43;--purple:#b294f3;--soft:#34264b}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:760px;margin:0 auto;padding:28px 16px 64px}
+a{color:var(--purple)}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:24px}
+.brand{font-weight:800;font-size:26px;letter-spacing:-1px;color:var(--text);text-decoration:none}
+.brand span{color:var(--purple);font-size:12px;vertical-align:super;margin-left:3px}
+.back{display:inline-flex;align-items:center;min-height:44px;padding:0 16px;border-radius:12px;background:var(--purple);color:#fff;text-decoration:none;font-weight:700;font-size:14px}
+h1{font-size:30px;line-height:1.2;letter-spacing:-.5px;margin:0 0 6px}
+h2{font-size:19px;margin:32px 0 8px}
+.updated{color:var(--muted);font-size:14px;margin:0 0 20px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px 18px;margin:14px 0}
+.summary{background:var(--soft);border-color:transparent}
+ul{padding-left:20px}
+li{margin:4px 0}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;vertical-align:top;padding:10px 8px;border-top:1px solid var(--line)}
+th{color:var(--muted);font-weight:600}
+.ms{border-left:3px solid var(--purple)}
+</style>
+</head>
+<body>
+<main>
+  <header><a class="brand" href="/explore.html">naviya<span>MY</span></a><a class="back" href="/explore.html">Open Naviya</a></header>
+  <h1>Privacy &amp; terms</h1>
+  <p class="updated">Last updated: 12 November 2026</p>
+
+  <div class="card summary">
+    <b>In short:</b> Naviya has no ads, no analytics and no tracking. You do not need an account. Your saved places stay on your own device. Your location is used only when you ask for it, to find places near you and to guide you. To show maps, search and routes, Naviya passes the minimum needed to the map services listed below.
+  </div>
+
+  <div class="card ms" lang="ms">
+    <b>Ringkasan (Bahasa Melayu):</b> Naviya tiada iklan, tiada analitik dan tiada penjejakan. Anda tidak perlu akaun. Tempat yang anda simpan kekal dalam peranti anda sendiri. Lokasi anda digunakan hanya apabila anda minta, untuk cari tempat berdekatan dan untuk navigasi. Untuk paparkan peta, carian dan laluan, Naviya hanya menghantar maklumat yang perlu kepada perkhidmatan peta yang disenaraikan di bawah.
+  </div>
+
+  <h2>What stays on your device</h2>
+  <p>These are kept in your browser's storage and are never sent to Naviya's server: saved journeys, Home and Work, recent searches, your day plan, road notes, language, theme and sound settings. You can export or delete them any time in <b>Privacy controls</b> (shield icon, or More → Privacy controls on a phone). Clearing your browser data also removes them.</p>
+
+  <h2>Your location</h2>
+  <ul>
+    <li>Naviya asks for your location only when you tap <b>Use my location</b>, search for something "near me", tap <b>Go home</b> / <b>Go to work</b>, or start navigation. You can refuse; search by name still works.</li>
+    <li>During navigation your position is used on your device to follow the route. It leaves your device only when Naviya recalculates after a wrong turn, as the new starting point sent to the routing service.</li>
+    <li>Naviya does not track you in the background and keeps no location history.</li>
+    <li>Prayer times are calculated on your device.</li>
+  </ul>
+
+  <h2>Services Naviya uses</h2>
+  <p>Requests go through Naviya's server (hosted on Cloudflare) so that your device talks to as few services as possible. Naviya does not send them any account or device identifier.</p>
+  <table>
+    <tr><th>Service</th><th>What it receives</th><th>Why</th></tr>
+    <tr><td>Photon / OpenStreetMap</td><td>What you type in search; the map area you are looking at</td><td>Finding places and nearby results</td></tr>
+    <tr><td>OSRM routing (OpenStreetMap data)</td><td>Start, stops and destination of a route</td><td>Calculating routes and turn instructions</td></tr>
+    <tr><td>Overpass (OpenStreetMap)</td><td>The shape of your route</td><td>Fixed speed cameras, R&amp;R, petrol, surau and EV chargers along the way</td></tr>
+    <tr><td>data.gov.my</td><td>Nothing about you</td><td>Live bus and KTM train positions, weekly fuel prices</td></tr>
+    <tr><td>Map tile provider (OpenStreetMap or the provider set by the site owner)</td><td>Your IP address and the map area shown; your browser contacts it directly</td><td>Drawing the map</td></tr>
+    <tr><td>Google Fonts</td><td>Your IP address; your browser contacts it directly</td><td>Loading the typefaces</td></tr>
+    <tr><td>TomTom (only if live traffic is switched on)</td><td>Start and destination of a driving route</td><td>Live traffic delay</td></tr>
+    <tr><td>Cloudflare (hosting)</td><td>Normal web request details such as IP address</td><td>Running and protecting the website</td></tr>
+  </table>
+  <p>Naviya's server may keep provider responses in memory for up to one hour to reduce repeat requests. It also counts requests per minute and per day to stay within service limits. These counts contain no search text, location or identity.</p>
+
+  <h2>Sharing</h2>
+  <p>When you tap <b>Share ETA</b> or <b>Copy journey</b>, the text and link are passed to the app you choose (for example WhatsApp). Shared links include the destination's coordinates.</p>
+
+  <h2>Using Naviya safely</h2>
+  <ul>
+    <li>Always follow road signs, traffic laws and instructions from the police and highway operators. Road information can be incomplete, out of date or wrong.</li>
+    <li>Do not handle your phone while driving or riding. Set your route before you move, and use a phone holder.</li>
+    <li>Travel times are estimates based on road speeds. Live traffic, tolls and Smart Lane status are shown only where a source exists.</li>
+    <li>Speed camera locations, place details, opening hours and prayer-time calculations may be incomplete or differ from official sources. For prayer times, check <a href="https://www.e-solat.gov.my/" rel="noopener">e-Solat (JAKIM)</a>.</li>
+    <li>Naviya is provided free, as is, without guarantees. Map data © <a href="https://www.openstreetmap.org/copyright" rel="noopener">OpenStreetMap contributors</a>.</li>
+  </ul>
+
+  <h2>Children</h2>
+  <p>Naviya does not knowingly collect personal information from anyone and has no accounts on this site.</p>
+
+  <h2>Contact and changes</h2>
+  <p>Questions or problems: open an issue at <a href="https://github.com/Bunny-ecah/Naviya-Maps/issues" rel="noopener">github.com/Bunny-ecah/Naviya-Maps</a>. If this policy changes, the date at the top will change.</p>
+</main>
+</body>
+</html>
