@@ -78,9 +78,14 @@ if (secretFlag > -1) {
 }
 
 step("Deploying");
-const deployed = wr(["deploy", "--config", builtConfig], { capture: true });
-process.stdout.write(deployed.stdout || "");
-if (deployed.status !== 0) { process.stderr.write(deployed.stderr || ""); fail("Deploy failed."); }
-const url = ((deployed.stdout || "").match(/https:\/\/[^\s]+\.workers\.dev/) || [])[0];
-console.log(`\n✅ Naviya is live${url ? ": " + url + "/explore.html" : ". See the address above."}`);
+// Run interactively so Wrangler can ask questions, such as choosing your workers.dev subdomain on a new account.
+if (wr(["deploy", "--config", builtConfig]).status !== 0) {
+  fail([
+    "Deploy failed. If the message above says you need a workers.dev subdomain:",
+    "  1. Open https://dash.cloudflare.com and go to Workers & Pages.",
+    "  2. Choose a subdomain name when asked (one time only, e.g. your name).",
+    "  3. Run `npm run deploy:public` again.",
+  ].join("\n"));
+}
+console.log("\n\u2705 Naviya is live. Open the https://\u2026workers.dev address shown above and add /explore.html");
 console.log("Run `npm run deploy:public` again after each update.");
