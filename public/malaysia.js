@@ -831,13 +831,34 @@
     if (v.ageSeconds === null) return "position time not given";
     return v.ageSeconds < 60 ? "updated " + v.ageSeconds + "s ago" : "updated " + Math.round(v.ageSeconds / 60) + " min ago";
   }
+  /** Official data.gov.my feeds read directly by the browser (some hosts block server requests); Naviya's server is the fallback. */
+  async function liveTransit(p, radiusKm) {
+    if (window.GTFSRT) {
+      const feeds = GTFSRT.feedsNear(p.lat, p.lon).slice(0, 4);
+      if (!feeds.length) return { available: true, covered: false, vehicles: [] };
+      const km = (a, b, c, d) => { const r = Math.PI / 180, x = Math.sin((c - a) * r / 2) ** 2 + Math.cos(a * r) * Math.cos(c * r) * Math.sin((d - b) * r / 2) ** 2; return 12742 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x)); };
+      const now = Math.floor(Date.now() / 1e3);
+      const results = await Promise.allSettled(feeds.map(async (f) => {
+        const res = await fetch("https://api.data.gov.my/gtfs-realtime/vehicle-position/" + f.path, { signal: AbortSignal.timeout(12e3) });
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        return { f, ...GTFSRT.decodeVehicleFeed(new Uint8Array(await res.arrayBuffer())) };
+      }));
+      if (results.some((r) => r.status === "fulfilled")) {
+        const vehicles = results.flatMap((r) => r.status === "fulfilled" ? r.value.vehicles.map((v) => ({ ...v, feed: r.value.f.name, kind: r.value.f.kind, distance: km(p.lat, p.lon, v.lat, v.lon), ageSeconds: v.timestamp ? Math.max(0, now - v.timestamp) : null })) : [])
+          .filter((v) => v.distance <= radiusKm && (v.ageSeconds === null || v.ageSeconds <= 600))
+          .sort((a, b) => a.distance - b.distance).slice(0, 60);
+        return { available: true, covered: true, vehicles };
+      }
+    }
+    return api("/api/transit?" + new URLSearchParams({ lat: p.lat, lon: p.lon, radius: radiusKm }));
+  }
   async function showLiveVehicles(p, radiusKm, id = requestId) {
     clearInterval(transitTimer);
     const run = async () => {
       if (!transitModes.includes(mode) || id !== requestId) return clearInterval(transitTimer);
       let box = $("#live-vehicles");
       try {
-        const data = await api("/api/transit?" + new URLSearchParams({ lat: p.lat, lon: p.lon, radius: radiusKm }));
+        const data = await liveTransit(p, radiusKm);
         if (id !== requestId) return;
         transitVehicles = (data.vehicles || []).filter((v) => v.kind === mode);
         transitLayer.clearLayers();
@@ -1131,7 +1152,7 @@ ${b ? naviyaUrl(fieldPoint("#origin"), b) : ""}`;
   }
   renderServices();
   function privacy() {
-    modal("Your journey, with clarity.", `<p>Search text and chosen map coordinates are sent through Naviya to Photon; route endpoints are sent to the road-routing provider. Driving-route geometry is sent to OpenStreetMap/Overpass (currently Private.coffee) to check mapped fixed cameras. In train and bus mode, the selected area is used by Naviya's server to filter official data.gov.my vehicle feeds; your location is not sent to data.gov.my. If live traffic is switched on, route endpoints are sent to TomTom. During navigation your position is used on this device to follow the route; it is sent to the routing provider only as a new starting point when Naviya recalculates after a wrong turn. Prayer times are calculated on your device. Search and route responses may be cached in server memory for up to one hour, without account identifiers. Shared service quotas store request counts, not search histories. Your account identity is not forwarded to those services. <a href="https://overpass.private.coffee/#privacy-policy" target="_blank" rel="noopener">Camera provider privacy information \u2197</a></p><p>Map tiles contact OpenStreetMap directly, exposing your IP address and viewed map area. Google Fonts is also used. Device location is requested only when you choose \u201CUse my location\u201D; the app does not track you in the background.</p><p>Saved journeys, Home and Work, recent searches, day plans, observations and theme preferences stay in this browser. Some saved places may contain precise coordinates. Signing out does not clear device-local records. Account profiles and points are stored separately on the server.</p><p><a href="/privacy.html">Read the full privacy policy & terms \u2197</a></p><div class="privacy-actions"><button id="export-local" class="primary">Export device data</button><button id="clear-local">Clear saved data on this device</button></div>`);
+    modal("Your journey, with clarity.", `<p>Search text and chosen map coordinates are sent through Naviya to Photon; route endpoints are sent to the road-routing provider. Driving-route geometry is sent to OpenStreetMap/Overpass (currently Private.coffee) to check mapped fixed cameras. In train and bus mode your browser downloads the official data.gov.my vehicle feeds for your area (data.gov.my sees your IP address, not your location) and filters them on your device. If live traffic is switched on, route endpoints are sent to TomTom. During navigation your position is used on this device to follow the route; it is sent to the routing provider only as a new starting point when Naviya recalculates after a wrong turn. Prayer times are calculated on your device. Search and route responses may be cached in server memory for up to one hour, without account identifiers. Shared service quotas store request counts, not search histories. Your account identity is not forwarded to those services. <a href="https://overpass.private.coffee/#privacy-policy" target="_blank" rel="noopener">Camera provider privacy information \u2197</a></p><p>Map tiles contact OpenStreetMap directly, exposing your IP address and viewed map area. Google Fonts is also used. Device location is requested only when you choose \u201CUse my location\u201D; the app does not track you in the background.</p><p>Saved journeys, Home and Work, recent searches, day plans, observations and theme preferences stay in this browser. Some saved places may contain precise coordinates. Signing out does not clear device-local records. Account profiles and points are stored separately on the server.</p><p><a href="/privacy.html">Read the full privacy policy & terms \u2197</a></p><div class="privacy-actions"><button id="export-local" class="primary">Export device data</button><button id="clear-local">Clear saved data on this device</button></div>`);
     $("#export-local").onclick = () => {
       const url = URL.createObjectURL(new Blob([JSON.stringify({ savedJourneys: saved, dayPlan: day, observations: reports, exportedAt: new Date().toISOString() }, null, 2)], { type: "application/json" }));
       const a = document.createElement("a");

@@ -1,4 +1,5 @@
-import {providerJson,endpoint,readJson,ServiceError,type ProviderEnvironment} from '../../../lib/provider-http';
+import {readJson,ServiceError,type ProviderEnvironment} from '../../../lib/provider-http';
+import {overpass} from '../../../lib/overpass';
 import {env} from 'cloudflare:workers';
 import {validCoordinate} from '../../../lib/road-routing';
 import {simplify,camerasForRoute,type Point} from '../../../lib/route-cameras';
@@ -16,8 +17,7 @@ export async function POST(request:Request){
  const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(text));const key=Array.from(new Uint8Array(digest),b=>b.toString(16).padStart(2,'0')).join('');
  const hit=cache.get(key);if(hit&&hit.expires>Date.now())return Response.json(hit.data);
  try{
- const configured=env as unknown as Record<string,string|undefined>;
- const result=await providerJson(endpoint(configured.NAVIYA_OVERPASS_URL,'https://overpass.private.coffee/api/interpreter'),{service:'cameras',env:env as unknown as ProviderEnvironment,method:'POST',body:new URLSearchParams({data:query}),timeout:15000,ttl:3600000,validate:d=>!d.remark&&Array.isArray(d.elements)&&d.elements.length<=2000&&Number.isFinite(Date.parse(d.osm3s?.timestamp_osm_base))}) as any;
+ const result=await overpass(query,env as unknown as ProviderEnvironment,{budgetMs:19000,validate:d=>d.elements.length<=2000&&Number.isFinite(Date.parse(d.osm3s?.timestamp_osm_base))}) as any;
  const data={available:true,routes:routes.map(r=>{const cameras=camerasForRoute(r,result.elements);return {count:cameras.length,cameras}}),source:'OpenStreetMap / Overpass',dataAsOf:result.osm3s.timestamp_osm_base,checkedAt:new Date().toISOString(),corridorMetres:50,coverage:'Mapped fixed cameras near the route. Direction and operation are unverified. Mobile traps and unmapped cameras are not included.'};
  if(cache.size>=40)cache.delete(cache.keys().next().value!);cache.set(key,{expires:Date.now()+3600000,data});return Response.json(data);
  }catch(error){return unavailable('Fixed-camera data is temporarily unavailable. The route remains usable.',error instanceof ServiceError?error.status:503)}

@@ -1,4 +1,5 @@
-import {providerJson,endpoint,readJson,ServiceError,type ProviderEnvironment} from '../../../lib/provider-http';
+import {readJson,ServiceError,type ProviderEnvironment} from '../../../lib/provider-http';
+import {overpass} from '../../../lib/overpass';
 import {env} from 'cloudflare:workers';
 import {validCoordinate} from '../../../lib/road-routing';
 import {simplify,type Point} from '../../../lib/route-cameras';
@@ -18,8 +19,7 @@ export async function POST(request:Request){
  const around=(r:number)=>`(around:${r},${line.map(p=>p[1].toFixed(5)+','+p[0].toFixed(5)).join(',')})`;
  const query=`[out:json][timeout:25];(nwr[amenity=fuel]${around(400)};nwr[amenity=charging_station]${around(400)};nwr[highway~"^(rest_area|services)$"]${around(550)};nwr[amenity=place_of_worship][religion=muslim]${around(650)};);out center tags 2000;`;
  try{
-  const configured=env as unknown as Record<string,string|undefined>;
-  const result=await providerJson(endpoint(configured.NAVIYA_OVERPASS_URL,'https://overpass.private.coffee/api/interpreter'),{service:'cameras',env:env as unknown as ProviderEnvironment,method:'POST',body:new URLSearchParams({data:query}),timeout:28000,ttl:3600000,validate:d=>!d.remark&&Array.isArray(d.elements)}) as any;
+  const result=await overpass(query,env as unknown as ProviderEnvironment,{budgetMs:28000}) as any;
   return Response.json({available:true,stops:stopsAlongRoute(route,result.elements),source:'OpenStreetMap / Overpass',dataAsOf:result.osm3s?.timestamp_osm_base||null},{headers:{'Cache-Control':'private, max-age=600'}});
  }catch(error){return fail(error instanceof ServiceError&&error.status===429?'Stop search has reached its request allowance. Try again later.':'Stops along the route are temporarily unavailable.',error instanceof ServiceError?error.status:503)}
 }

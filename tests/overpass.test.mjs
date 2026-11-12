@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {overpass} from '../lib/overpass.ts';
+const calls=[];
+globalThis.fetch=async(url)=>{const host=new URL(url).host;calls.push(host);
+ if(host==='overpass.private.coffee')return new Response('busy',{status:504});
+ if(host==='overpass-api.de')return new Response(JSON.stringify({elements:[{type:'node',id:1}],osm3s:{timestamp_osm_base:'2026-11-12T00:00:00Z'}}),{headers:{'Content-Type':'application/json'}});
+ throw new Error('should not reach '+host)};
+const console_error=console.error;console.error=()=>{};
+const data=await overpass('[out:json];node(1);out;',{},{budgetMs:20000});
+console.error=console_error;
+assert.equal(data.elements.length,1);assert.deepEqual(calls,['overpass.private.coffee','overpass-api.de'],'busy server skipped, next server used');
+console.log('PASS: Overpass falls back to the next public server when one is at capacity');

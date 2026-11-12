@@ -24,7 +24,7 @@ assert.equal(decoded.vehicles.length,2,'entities without a position are dropped'
 const [a]=decoded.vehicles;
 assert.equal(a.id,'veh-a');assert.equal(a.routeId,'T789');assert.equal(a.tripId,'trip-a');assert.equal(a.plate,'WTE 1234');
 assert.ok(Math.abs(a.lat-3.1579)<1e-4&&Math.abs(a.lon-101.7119)<1e-4);
-assert.equal(a.speedKmh,36);assert.equal(a.bearing,90);assert.equal(a.timestamp,1762905590);
+assert.equal(a.speedKmh,10);assert.equal(a.bearing,90);assert.equal(a.timestamp,1762905590);
 assert.throws(()=>decodeVehicleFeed(feed.slice(0,feed.length-3)),/Truncated/);
 assert.deepEqual(decodeVehicleFeed(new Uint8Array()).vehicles,[]);
 

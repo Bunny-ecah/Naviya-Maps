@@ -24,7 +24,7 @@ function decodeVehiclePosition(bytes:Uint8Array,entityId:string):Vehicle|null{
  const v:Vehicle={id:entityId,lat:NaN,lon:NaN,routeId:'',tripId:'',label:'',plate:'',bearing:null,speedKmh:null,timestamp:null};
  readMessage(bytes,(r,field,wire)=>{
   if(field===1&&wire===2){readMessage(r.bytes(),(t,f,w)=>{if(f===1&&w===2){v.tripId=str(t);return true}if(f===5&&w===2){v.routeId=str(t);return true}return false});return true}
-  if(field===2&&wire===2){readMessage(r.bytes(),(p,f,w)=>{if(w!==5)return false;const x=p.float();if(f===1)v.lat=x;else if(f===2)v.lon=x;else if(f===3)v.bearing=x;else if(f===5)v.speedKmh=Math.round(x*3.6);return true});return true}
+  if(field===2&&wire===2){readMessage(r.bytes(),(p,f,w)=>{if(w!==5)return false;const x=p.float();if(f===1)v.lat=x;else if(f===2)v.lon=x;else if(f===3)v.bearing=x;else if(f===5)v.speedKmh=Math.round(x)/* data.gov.my feeds report km/h here (checked against live ETS and Rapid KL data) */;return true});return true}
   if(field===5&&wire===0){v.timestamp=r.varint();return true}
   if(field===8&&wire===2){readMessage(r.bytes(),(d,f,w)=>{if(w!==2)return false;const s=str(d);if(f===1)v.id=s||v.id;else if(f===2)v.label=s;else if(f===3)v.plate=s;return true});return true}
   return false;
