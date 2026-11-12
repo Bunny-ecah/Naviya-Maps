@@ -21,8 +21,10 @@ Set runtime values using Sites environment settings, never browser code or track
 | NAVIYA_ROUTER_CAR_URL | HTTPS OSRM-compatible base for driving |
 | NAVIYA_ROUTER_WALK_URL | HTTPS OSRM-compatible base for walking |
 | NAVIYA_ROUTER_CYCLE_URL | HTTPS OSRM-compatible base for cycling |
+| NAVIYA_GTFS_RT_URL | Optional. Base for GTFS Realtime vehicle positions, with a trailing slash. Default https://api.data.gov.my/gtfs-realtime/vehicle-position/ |
+| NAVIYA_TOMTOM_KEY | Optional secret. Switches on live traffic (overlay and delay on the fastest driving route). Leave unset to show the Waze hand-off only |
 
-Default shared quotas count upstream calls, not cache hits: places 60/minute and 4,000/day; routing 30/minute and 1,000/day; cameras 6/minute and 100/day. Search and nearby share the places allowance. Quotas use UTC minute/day buckets and are safety limits, not purchased provider capacity. Change them only to match an agreed provider allowance. Usage records contain bucket names, counts and expiry, never account IDs or search terms. Expired records are cleaned on subsequent requests. Caches contain provider responses in memory for up to one hour and do not link queries to account identities.
+Default shared quotas count upstream calls, not cache hits: places 60/minute and 4,000/day; routing 30/minute and 1,000/day; cameras 6/minute and 100/day; transit 40/minute and 6,000/day (feeds cached 25 s); traffic 20/minute and 2,000/day. Traffic overlay tiles are proxied without the D1 quota, so watch TomTom tile usage. Search and nearby share the places allowance. Quotas use UTC minute/day buckets and are safety limits, not purchased provider capacity. Change them only to match an agreed provider allowance. Usage records contain bucket names, counts and expiry, never account IDs or search terms. Expired records are cleaned on subsequent requests. Caches contain provider responses in memory for up to one hour and do not link queries to account identities.
 
 ## Camera coverage
 
@@ -30,9 +32,15 @@ Counts include OSM highway=speed_camera nodes within 50 metres of the original d
 
 Sources: https://github.com/komoot/photon/blob/master/docs/api-v1.md and https://overpass.private.coffee/ . Public providers provide no uptime guarantee. A larger launch needs dedicated provider capacity and monitoring.
 
+## Live transit and traffic
+
+Train and bus mode reads official data.gov.my GTFS Realtime vehicle-position feeds (KTMB, Prasarana rapid-bus-kl / rapid-bus-mrtfeeder / rapid-bus-penang, and BAS.MY Johor, Melaka, Seremban A/B, Ipoh, Kangar, Alor Setar, Kota Bharu, Kuala Terengganu, Kuching). Only feeds whose area is near the selected place are fetched. Decoding is covered by deterministic tests; live connectivity could not be tested from the build environment, so check a Klang Valley journey in Bus mode after publishing. Positions older than 10 minutes are hidden.
+
+Live traffic is off until NAVIYA_TOMTOM_KEY is set. With a key, the map gains a Live traffic toggle and the fastest driving route shows current time and delay.
+
 ## Unavailable features
 
-Live traffic, toll prices, verified Smart Lane activation, motorcycle-specific routes, and scheduled train/bus itineraries need licensed or official feeds. Train and bus currently offer station/stop discovery. Road notes are local and unverified. No traffic colors, highway activation times or fares are invented.
+Toll prices, verified Smart Lane activation, motorcycle-specific road restrictions, bus/train arrival predictions and live LRT/MRT positions need licensed or official feeds that do not exist publicly. Riding uses the car road network and is labelled that way. Road notes are local and unverified. No traffic colours, highway activation times or fares are invented.
 
 ## Validation and rollout
 

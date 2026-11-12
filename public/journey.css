@@ -1,0 +1,71 @@
+/* Journey extras: toll and traffic lines, navigation hand-off, public transport planner, live services. */
+:root{--ok:#2f7d64;--ok-soft:#e6f4ee;--warn:#9a5b12;--warn-soft:#fdf1e1;--bad:#b23a3a;--bad-soft:#fbe9e9}
+.dark{--ok:#7fd1b2;--ok-soft:#1d3a31;--warn:#f0b866;--warn-soft:#3d2e19;--bad:#f29a9a;--bad-soft:#402326}
+
+/* Respect the hidden attribute even where component styles set display. */
+.routing-preferences[hidden],.trip-actions [hidden],#journey-details[hidden],#mode-explore[hidden]{display:none!important}
+
+/* Route cards */
+.route-info span{color:var(--muted)}
+.route-toll,.route-traffic{display:flex;align-items:flex-start;gap:7px;margin-top:9px;font-size:12px;line-height:1.4;color:var(--warn)}
+.route-toll .ni{width:15px;height:15px;flex:none;margin-top:1px}
+.route-toll small{display:block;color:var(--muted);font-size:11px;margin-top:2px}
+.route-toll.free{color:var(--ok)}
+.route-traffic{flex-direction:column;gap:1px;padding:8px 10px;border-radius:8px;background:var(--ok-soft);color:var(--ok)}
+.route-traffic.slow{background:var(--warn-soft);color:var(--warn)}
+.route-traffic.heavy{background:var(--bad-soft);color:var(--bad)}
+.route-traffic small{color:inherit;opacity:.85;font-size:11px}
+.timeline li.toll-step{color:var(--warn)}
+
+/* Hand-off to navigation apps */
+.handoff{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:12px 0 4px}
+.handoff[hidden]{display:none}
+.handoff>span{width:100%;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.handoff a{flex:1 1 140px;display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:44px;padding:0 14px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--text);font-weight:600;font-size:13px;text-decoration:none}
+.handoff a .ni{width:16px;height:16px;color:var(--purple)}
+.handoff a.waze{background:var(--purple);border-color:var(--purple);color:#fff}
+.handoff a.waze .ni{color:#fff}
+.handoff a:focus-visible{outline:2px solid var(--purple);outline-offset:2px}
+
+/* Public transport plan */
+.transit-plan{display:grid;gap:12px}
+.transit-end>b{display:block;font-size:12px;margin-bottom:6px}
+.transit-stop{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:10px 12px;margin-bottom:6px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--text)}
+.transit-stop>.ni{width:18px;height:18px;color:var(--purple);flex:none}
+.transit-stop b{display:block;font-size:13px}
+.transit-stop small,.vehicle-row small{display:block;color:var(--muted);font-size:11px;margin-top:2px}
+.live-vehicles:empty{display:none}
+.live-vehicles{border-radius:12px;padding:12px;background:var(--purple-soft)}
+.live-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:6px;font-size:12px}
+.live-head small{color:var(--muted);font-size:10px}
+.live-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#2fa67a;margin-right:6px;box-shadow:0 0 0 0 #2fa67a88;animation:livepulse 2s infinite}
+@keyframes livepulse{70%{box-shadow:0 0 0 7px #2fa67a00}100%{box-shadow:0 0 0 0 #2fa67a00}}
+.vehicle-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-top:1px solid var(--line);font-size:12px}
+.vehicle-row:first-of-type{border-top:0}
+.vehicle-row>.ni{width:16px;height:16px;color:var(--purple);flex:none}
+.vehicle-pin{display:flex!important;align-items:center;justify-content:center;gap:2px;border-radius:15px;background:#2f7d64;color:#fff;border:2px solid #fff;box-shadow:0 2px 8px #0003;width:auto!important;min-width:30px;padding:0 6px}
+.vehicle-pin.train{background:#1f5fa8}
+.vehicle-pin .ni{width:14px;height:14px}
+.vehicle-pin b{font-size:9px;line-height:1}
+
+/* Live services card and dialog */
+.service-list{list-style:none;margin:10px 0 14px;padding:0;display:grid;gap:2px}
+.service-list li{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line)}
+.service-list li:first-child{border-top:0}
+.service-list li>.ni{width:17px;height:17px;color:var(--purple);flex:none}
+.service-list li>span{flex:1;min-width:0}
+.service-list b{display:block;font-size:12.5px}
+.service-list small{display:block;color:var(--muted);font-size:11px}
+.service-list em{font-style:normal;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;white-space:nowrap}
+.svc-on{background:var(--ok-soft);color:var(--ok)}
+.svc-link{background:var(--purple-soft);color:var(--purple)}
+.svc-off{background:var(--line);color:var(--muted)}
+
+/* Map traffic toggle */
+#traffic-toggle{display:inline-flex;align-items:center;gap:5px}
+#traffic-toggle .ni{width:13px;height:13px}
+#traffic-toggle.active{background:var(--purple);color:#fff;border-color:var(--purple)}
+
+/* Day plan */
+.day-route{display:flex;align-items:center;justify-content:center;gap:8px;margin:0 0 14px;text-decoration:none;min-height:44px;border-radius:10px}
+@media (prefers-reduced-motion:reduce){.live-dot{animation:none}}
