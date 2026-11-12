@@ -61,10 +61,11 @@ Open **http://127.0.0.1:4173**. Portable development provides a simulated sign-i
 ```bash
 npm run build
 node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0000_nebulous_patriot.sql
+node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0001_smooth_alex_wilder.sql
 npm run dev -- --port 4173
 ```
 
-Apply each migration once, in order. Production and preview databases are separate. No database migration is required specifically for nationwide place discovery or routing.
+Apply each migration once, in order (`0000`, then `0001`, which adds the shared request-allowance table). Production and preview databases are separate. Search and routing still work without `0001`; the terminal then shows a one-time warning that quotas are skipped.
 
 ## Validation
 
@@ -73,6 +74,7 @@ node tests/place-search.test.mjs
 node tests/road-routing.test.mjs
 node tests/transit-and-tolls.test.mjs
 node tests/search-intent.test.mjs
+node tests/provider-missing-table.test.mjs
 npm run build
 ```
 
