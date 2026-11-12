@@ -1,0 +1,83 @@
+/* Phone-first layout: search and map on the first screen, compact controls, full-screen map, install card. */
+.map-fullscreen,.install-card{display:none}
+
+@media (max-width:760px){
+  /* First screen = search + map. The marketing hero and QR card are for desktop visitors. */
+  .preview-banner,.intro{display:none!important}
+  .shell main{padding-top:10px}
+
+  /* Header: icon buttons, 44px targets */
+  header{position:sticky;top:0;z-index:1000}
+  .headeractions .account-entry span{display:none}
+  .headeractions .account-entry{width:44px;min-height:44px;padding:0;justify-content:center}
+  .headeractions .report-btn{width:44px;min-height:44px;padding:0;font-size:0;gap:0;justify-content:center}
+  .headeractions .report-btn .ni{width:20px;height:20px}
+
+  /* Search stays reachable while scrolling */
+  .explore-bar{position:sticky;top:var(--header-h,64px);z-index:900;margin:0 -16px;padding:8px 16px;background:var(--bg)}
+  body.search-stuck .explore-bar{box-shadow:0 8px 18px #25123e12}
+  body.search-stuck .explore-bar>button{display:none}
+  .global-search{min-height:52px}
+
+  /* Search options in one short row */
+  .search-settings{display:flex;flex-wrap:nowrap;align-items:center;gap:10px;margin:2px 0 12px}
+  .search-settings>label[for="search-kind"],.search-settings>span{display:none}
+  .search-settings select{flex:1;min-width:0;min-height:44px}
+  .search-settings .bias-label{flex:none;min-height:44px;margin:0;white-space:nowrap}
+  .search-settings input[type=checkbox]{width:20px;height:20px}
+
+  /* A taller map with fewer floating buttons (pinch to zoom; regions via search) */
+  .map{height:min(62svh,560px);min-height:360px}
+  .map-regions,#map-reset,.leaflet-control-zoom{display:none!important}
+  .map-live-toolbar{right:66px}
+  .map-location-actions{right:12px;bottom:40px}
+  #locate-me{width:48px;height:48px;min-height:48px;padding:0;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px #25123e26}
+  #locate-me span{display:none}
+  #locate-me .ni{width:22px;height:22px;color:var(--purple)}
+  .map-state{left:12px;right:auto;max-width:calc(100% - 90px);bottom:12px;padding:7px 10px;font-size:11px}
+
+  .map-fullscreen{display:flex;position:absolute;top:12px;right:12px;z-index:450;width:44px;height:44px;align-items:center;justify-content:center;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--purple);box-shadow:0 3px 12px #25123e1f}
+  .map-fullscreen .ni{width:20px;height:20px}
+  .map-fullscreen .close,body.map-full .map-fullscreen .open{display:none}
+  body.map-full .map-fullscreen .close{display:flex}
+
+  /* Full-screen map: everything except the header steps aside */
+  body.map-full{overflow:hidden}
+  body.map-full .map{position:fixed;inset:var(--header-h,64px) 0 0 0;height:auto;min-height:0;z-index:4600;border-radius:0;margin:0}
+  body.map-full .map-state{bottom:calc(16px + env(safe-area-inset-bottom))}
+  body.map-full .map-location-actions{bottom:calc(64px + env(safe-area-inset-bottom))}
+  body.map-full .install-card,body.keyboard-open .install-card{display:none!important}
+
+  /* Planner and lists: comfortable thumb targets */
+  .transport-modes button{min-height:58px}
+  .locations input{font-size:16px}
+  .routing-preferences label{min-height:44px;display:flex;align-items:center;gap:8px}
+  .routing-preferences input{width:20px;height:20px}
+  .route-card{padding:14px}
+  .handoff a{min-height:48px;font-size:14px}
+
+  /* Install card above the bottom navigation */
+  .install-card:not([hidden]){display:flex;position:fixed;left:12px;right:12px;bottom:calc(80px + env(safe-area-inset-bottom));z-index:4550;align-items:center;gap:10px;padding:10px 10px 10px 12px;border-radius:16px;background:var(--surface);border:1px solid var(--line);box-shadow:0 10px 30px #25123e2e}
+  .install-card img{border-radius:10px;flex:none}
+  .install-card div{flex:1;min-width:0}
+  .install-card b{display:block;font-size:13px}
+  .install-card small{display:block;color:var(--muted);font-size:11px}
+  .install-card .install-go{min-height:40px;padding:0 14px;border-radius:10px;border:0;background:var(--purple);color:#fff;font-weight:700}
+  .install-card .install-x{width:36px;height:40px;border:0;background:none;color:var(--muted);font-size:22px}
+
+  /* Toasts above the bottom navigation */
+  #toast{bottom:calc(88px + env(safe-area-inset-bottom));max-width:calc(100% - 32px);text-align:center}
+}
+
+/* Installed app: no "open on your phone" prompts */
+body.installed-app .phone-qr,body.installed-app #phone-qr-open{display:none!important}
+
+.install-steps{padding-left:20px;line-height:1.9}
+
+/* Official fuel price chips (all sizes) */
+.fuel-official{margin:4px 0 12px}
+.fuel-official small{color:var(--muted);font-size:11px}
+.fuel-official .quick-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.fuel-official .quick-chips button{min-height:36px;padding:0 12px;border-radius:18px;border:1px solid var(--line);background:var(--surface);color:var(--text);font-size:12px;cursor:pointer}
+.fuel-official .quick-chips button b{color:var(--purple);margin-left:4px}
+.fuel-official .quick-chips button.active{border-color:var(--purple);background:var(--purple-soft)}

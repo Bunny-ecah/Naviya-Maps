@@ -360,8 +360,13 @@
     searchState = state;
     box.hidden = false;
     const where = searchBias(field);
-    box.innerHTML = `<div class="search-heading">Quick search <span>${where ? "near " + esc(where.name) : "Malaysia"}</span></div><div class="quick-chips">${quickSearches.map(([q, label]) => `<button type="button" data-quick="${q}">${label}</button>`).join("")}</div><div class="search-tip">Or type a name, address, postcode, or things like <b>mall dekat JB</b> or <b>petrol near me</b>.</div>`;
+    state.places = recent.slice(0, 4);
+    const recentRows = state.places.map((p, i) => `<button role="option" id="${field.id}-option-${i}" aria-selected="false" data-result="${i}"><span class="suggest-icon">${NI("clock")}</span><div><b>${esc(p.name)}</b><small>${esc(p.type || "Place")} \xB7 ${esc(p.address || "")}</small></div><span>${NI("arrow")}</span></button>`).join("");
+    box.innerHTML = `${recentRows ? `<div class="search-heading">Recent <span><button type="button" class="link-btn" id="clear-recent">Clear</button></span></div>${recentRows}` : ""}<div class="search-heading">Quick search <span>${where ? "near " + esc(where.name) : "Malaysia"}</span></div><div class="quick-chips">${quickSearches.map(([q, label]) => `<button type="button" data-quick="${q}">${label}</button>`).join("")}</div><div class="search-tip">Or type a name, address, postcode, or things like <b>mall dekat JB</b> or <b>petrol near me</b>.</div>`;
     box.querySelectorAll("[data-quick]").forEach((b) => b.onclick = () => { field.value = b.dataset.quick; field.focus(); startSearch(field, true); });
+    box.querySelectorAll("[data-result]").forEach((b) => b.onclick = () => pickSearch(state, +b.dataset.result));
+    const clear = box.querySelector("#clear-recent");
+    if (clear) clear.onclick = () => { recent = []; write("recent", []); showQuickSearches(field); };
     positionSearch(state);
   }
   function startSearch(field, immediate = false) {
@@ -395,6 +400,10 @@
       state.box.innerHTML = `<div class="search-heading">${heading} <span>${where}</span></div>${locateHint}${state.places.length ? rows : empty}<div class="search-credit">\xA9 OpenStreetMap contributors \xB7 Photon</div>`;
       state.box.querySelectorAll("[data-result]").forEach((b) => b.onclick = () => pickSearch(state, +b.dataset.result));
       state.box.querySelectorAll("[data-try]").forEach((b) => b.onclick = () => { state.field.value = b.dataset.try; state.field.focus(); startSearch(state.field, true); });
+      if (intent && intent.nearMe && !intent.near && !myLocation && !state.askedLocation) {
+        state.askedLocation = true;
+        locateMe(() => { if (searchState === state) { state.field.focus(); startSearch(state.field, true); } });
+      }
       const loc = state.box.querySelector("#search-locate");
       if (loc) loc.onclick = () => locateMe(() => { state.field.focus(); startSearch(state.field, true); });
       positionSearch(state);
@@ -404,11 +413,19 @@
       retryAfter(state.box.querySelector("button"), e.retryAfter || 1, () => runSearch(state));
     }
   }
+  let recent = read("recent", []);
+  if (!Array.isArray(recent)) recent = [];
+  recent = recent.filter((p) => p && typeof p.name === "string" && inside(p));
+  function remember(p) {
+    recent = [{ id: p.id, name: p.name, address: p.address, type: p.type, category: p.category, lat: +p.lat, lon: +p.lon }, ...recent.filter((x) => !(x.lat === +p.lat && x.lon === +p.lon))].slice(0, 6);
+    write("recent", recent);
+  }
   function pickSearch(state, i) {
     const p = state.places[i];
     if (!p) return;
     const field = state.field;
     closeSearch();
+    remember(p);
     if (field.id === "place-search") {
       field.value = p.name;
       setArea(p);
@@ -872,7 +889,7 @@
     modal("Your journey steps", `<div class="status-note">${minutes(r.duration)} \xB7 ${(r.distance / 1e3).toFixed(1)} km \xB7 arrive ~${clock(r.duration)}</div>${tollNote}<ol class="timeline">${r.steps.map((s) => `<li class="${s.toll ? "toll-step" : ""}">${esc(stepText(s))}${s.type === "arrive" ? "" : `<small>${distance(s.distance / 1e3)}</small>`}</li>`).join("")}</ol><p class="small-print">For voice guidance, use Start navigating \u2192 Waze or Google Maps.</p>${["car", "motorbike"].includes(mode) ? '<button id="fuel-tool" class="primary">Estimate fuel cost</button>' : ""}`);
     if (!$("#fuel-tool")) return;
     $("#fuel-tool").onclick = () => {
-      modal("Journey cost estimate", `<p>Based on the selected ${(r.distance / 1e3).toFixed(1)} km road route. Enter your own current fuel price.</p><label>Fuel economy \xB7 litres per 100 km<input id="economy" type="number" min="1" max="50" step="0.1" value="${mode === "motorbike" ? 2.5 : 6.5}"></label><label>Fuel price \xB7 RM per litre<input id="fuel-price" type="number" min="0.1" max="30" step="0.01" placeholder="Enter current price"></label><button class="primary" id="calculate-fuel">Calculate fuel estimate</button><div id="fuel-result" aria-live="polite"></div><p>${r.toll?.uses ? "<b>This route uses toll roads.</b> Tolls are not included" : "No toll roads on this route"}. Parking and other costs are not included.</p>`);
+      modal("Journey cost estimate", `<p>Based on the selected ${(r.distance / 1e3).toFixed(1)} km road route. Pick this week\u2019s official price or enter your own.</p><label>Fuel economy \xB7 litres per 100 km<input id="economy" type="number" min="1" max="50" step="0.1" value="${mode === "motorbike" ? 2.5 : 6.5}"></label><label>Fuel price \xB7 RM per litre<input id="fuel-price" type="number" min="0.1" max="30" step="0.01" placeholder="Enter or pick a price"></label><div id="fuel-official" class="fuel-official"><small>Loading this week's official prices\u2026</small></div><button class="primary" id="calculate-fuel">Calculate fuel estimate</button><div id="fuel-result" aria-live="polite"></div><p>${r.toll?.uses ? "<b>This route uses toll roads.</b> Tolls are not included" : "No toll roads on this route"}. Parking and other costs are not included.</p>`);
       $("#calculate-fuel").onclick = () => {
         const e = +$("#economy").value, p = +$("#fuel-price").value;
         if (e < 1 || e > 50 || p < 0.1 || p > 30) {
@@ -881,6 +898,19 @@
         }
         $("#fuel-result").textContent = "Estimated fuel cost: RM" + (r.distance / 1e3 / 100 * e * p).toFixed(2);
       };
+      api("/api/fuel-price").then((data) => {
+        const box = $("#fuel-official");
+        if (!box) return;
+        box.innerHTML = `<small>Official prices${data.date ? " \xB7 week of " + esc(new Date(data.date).toLocaleDateString("en-MY", { day: "numeric", month: "short", year: "numeric" })) : ""} \xB7 tap to use</small><div class="quick-chips">${data.prices.map((f) => `<button type="button" data-fuel="${f.price}">${esc(f.label)} <b>RM${f.price.toFixed(2)}</b></button>`).join("")}</div>${data.prices.some((f) => f.id === "ron95_budi95") ? "<small>BUDI95 is the subsidised RON95 price for eligible Malaysians; pick RON95 if it doesn\u2019t apply to you.</small>" : ""}`;
+        box.querySelectorAll("[data-fuel]").forEach((b) => b.onclick = () => {
+          $("#fuel-price").value = b.dataset.fuel;
+          box.querySelectorAll("[data-fuel]").forEach((x) => x.classList.toggle("active", x === b));
+          $("#calculate-fuel").click();
+        });
+        const prefer = Math.max(0, data.prices.findIndex((f) => f.id === "ron95_budi95"));
+        const pick = box.querySelectorAll("[data-fuel]")[prefer];
+        if (pick && !$("#fuel-price").value) pick.click();
+      }).catch(() => { const box = $("#fuel-official"); if (box) box.innerHTML = '<small>Official prices unavailable right now. Enter your pump price.</small>'; });
     };
   };
   $("#save").onclick = () => {
@@ -1040,7 +1070,7 @@ ${b ? googleUrl(fieldPoint("#origin"), b, { car: "driving", motorbike: "driving"
   }
   renderServices();
   function privacy() {
-    modal("Your journey, with clarity.", `<p>Search text and chosen map coordinates are sent through Naviya to Photon; route endpoints are sent to the road-routing provider. Driving-route geometry is sent to OpenStreetMap/Overpass (currently Private.coffee) to check mapped fixed cameras. In train and bus mode, the selected area is used by Naviya's server to filter official data.gov.my vehicle feeds; your location is not sent to data.gov.my. If live traffic is switched on, route endpoints are sent to TomTom. Navigation buttons open Waze or Google Maps, which then receive your destination under their own privacy policies. Search and route responses may be cached in server memory for up to one hour, without account identifiers. Shared service quotas store request counts, not search histories. Your account identity is not forwarded to those services. <a href="https://overpass.private.coffee/#privacy-policy" target="_blank" rel="noopener">Camera provider privacy information \u2197</a></p><p>Map tiles contact OpenStreetMap directly, exposing your IP address and viewed map area. Google Fonts is also used. Device location is requested only when you choose \u201CUse my location\u201D; the app does not track you in the background.</p><p>Saved journeys, day plans, observations and theme preferences stay in this browser. Some saved places may contain precise coordinates. Signing out does not clear device-local records. Account profiles and points are stored separately on the server.</p><div class="privacy-actions"><button id="export-local" class="primary">Export device data</button><button id="clear-local">Clear saved data on this device</button></div>`);
+    modal("Your journey, with clarity.", `<p>Search text and chosen map coordinates are sent through Naviya to Photon; route endpoints are sent to the road-routing provider. Driving-route geometry is sent to OpenStreetMap/Overpass (currently Private.coffee) to check mapped fixed cameras. In train and bus mode, the selected area is used by Naviya's server to filter official data.gov.my vehicle feeds; your location is not sent to data.gov.my. If live traffic is switched on, route endpoints are sent to TomTom. Navigation buttons open Waze or Google Maps, which then receive your destination under their own privacy policies. Search and route responses may be cached in server memory for up to one hour, without account identifiers. Shared service quotas store request counts, not search histories. Your account identity is not forwarded to those services. <a href="https://overpass.private.coffee/#privacy-policy" target="_blank" rel="noopener">Camera provider privacy information \u2197</a></p><p>Map tiles contact OpenStreetMap directly, exposing your IP address and viewed map area. Google Fonts is also used. Device location is requested only when you choose \u201CUse my location\u201D; the app does not track you in the background.</p><p>Saved journeys, recent searches, day plans, observations and theme preferences stay in this browser. Some saved places may contain precise coordinates. Signing out does not clear device-local records. Account profiles and points are stored separately on the server.</p><div class="privacy-actions"><button id="export-local" class="primary">Export device data</button><button id="clear-local">Clear saved data on this device</button></div>`);
     $("#export-local").onclick = () => {
       const url = URL.createObjectURL(new Blob([JSON.stringify({ savedJourneys: saved, dayPlan: day, observations: reports, exportedAt: new Date().toISOString() }, null, 2)], { type: "application/json" }));
       const a = document.createElement("a");
@@ -1054,6 +1084,8 @@ ${b ? googleUrl(fieldPoint("#origin"), b, { car: "driving", motorbike: "driving"
       saved = [];
       day = [];
       reports = [];
+      recent = [];
+      write("recent", []);
       write("saved", []);
       write("day", []);
       write("reports", []);
@@ -1100,6 +1132,12 @@ ${b ? googleUrl(fieldPoint("#origin"), b, { car: "driving", motorbike: "driving"
   $("#region-east").onclick = () => map.fitBounds([[0.8, 109.4], [7.5, 119.6]], { padding: [15, 15] });
   $("#map-state").textContent = "Zoom in for streets and mapped buildings. Select a search result to focus.";
   $("#map-reset").innerHTML = NI("locate");
+  window.Naviya = {
+    search(q) { const f = $("#place-search"); f.value = q; f.focus(); startSearch(f, true); },
+    savedJourneys() { savedJourneys(); },
+    locate() { locateMe(); },
+    map
+  };
   setMode("car");
   initialDiscovery();
   setupTraffic();

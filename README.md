@@ -12,6 +12,11 @@ Verified in Chromium viewport previews at 320, 390, 768, 1024 and 1366 px, inclu
 
 ## Working features
 
+- **Installable phone app (PWA)**: add to the home screen on Android and iPhone, opens full screen, starts offline from cache, with home-screen shortcuts (Malls near me, Petrol near me, Saved). `public/manifest.webmanifest`, `public/sw.js`, `public/app-shell.js`. Bump `VERSION` in `sw.js` on each release so phones pick up new files promptly.
+- **Phone-first layout** (`public/mobile.css`): search and map on the first screen, search bar stays on top while scrolling, icon header, larger map with a full-screen mode (Back closes it), one-tap "my location" button, 44 px touch targets.
+- **Recent searches** in the search box, and "near me" searches ask for location automatically.
+- **Official fuel prices** in the fuel estimate (RON95, BUDI95, RON97, diesel) from data.gov.my, refreshed weekly (`app/api/fuel-price`).
+
 - General place and address search across Peninsular Malaysia, Sabah and Sarawak, powered by Photon/OpenStreetMap.
 - **Smart search** that understands kinds of places in English and Bahasa Melayu: `mall`, `restoran`, `kedai makan dekat PJ`, `petrol near me`, `klinik di Shah Alam`, `jb mall`, `surau`, `tandas`, `R&R` and more (`lib/search-intent.ts`). These return the nearest real places of that kind around the named town, your location, the selected area or the map on screen, with distances. Short forms are expanded (KL, JB, PJ, KK, 1U, jln, tmn, kg). Names that look like categories ("Masjid Jamek", "Taman Universiti") still find the named place first. Tapping the search box shows quick-search chips; "Nearest first" is on by default.
 - Search-type filters for **buildings/offices**, towns/areas, streets/addresses and shops/places. Named offices, towers, commercial/residential buildings and indexed numbered addresses are supported where mapped. Optional location preference prioritizes the selected area without replacing nationwide coverage.
